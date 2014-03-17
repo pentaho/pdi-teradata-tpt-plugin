@@ -1,0 +1,82 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+// Keep Java source compatibility at 1.6 unless you absolutely need 7+ features, as this will 
+// ensure maximum supportability and compatibility for your plugin.
+sourceCompatibility = JavaVersion.VERSION_1_6
+
+// External property (deprecated in Gradle 2.x) for Kettle and metastore versions. If you wish to 
+// put your plugin in the Marketplace against the current revision (say, 5.0.x), use the latest
+// release tag
+project.ext.kettle_dependency_revision = 'TRUNK-SNAPSHOT'
+project.ext.metastore_dependency_revision = 'TRUNK-SNAPSHOT'
+
+// This adds the Pentaho repositories and Maven Central. The official list of repos is currently
+// kept in GitHub at pentaho/subfloor/master-copies/ivysettings.xml, but if we move to Maven
+// you will want to see the common POM.
+project.repositories {
+  ivy {
+    url "http://repo.pentaho.org/artifactory/repo/"
+    layout  "pattern", {
+      ivy "[organisation]/[module]/[revision]/[module]-[revision].ivy.xml"
+      artifact "[organisation]/[module]/[revision]/[module]-[revision].jar"
+      m2compatible = true
+    }
+  }
+  maven {
+    url 'http://repo.pentaho.org/artifactory/repo'
+  }
+  mavenCentral()
+}
+
+configurations {
+  runtimeWithoutCompile {
+    transitive = false
+  }
+  zip
+}
+
+dependencies {
+  // Put compile-time dependencies here. This will include anything that Kettle provides that you
+  // do not need to override, and usually includes kettle-core, kettle-engine, kettle-ui-swt, and metastore
+  compile("pentaho-kettle:kettle-core:${project.ext.kettle_dependency_revision}")
+  compile("pentaho-kettle:kettle-engine:${project.ext.kettle_dependency_revision}")
+  compile("pentaho-kettle:kettle-ui-swt:${project.ext.kettle_dependency_revision}")
+  compile("pentaho:metastore:${project.ext.metastore_dependency_revision}")
+  
+ 
+  // Put runtime dependencies here using the runtime() directive. Example:
+  //  runtime("com.tinkerpop.gremlin:gremlin-groovy:${project.ext.blueprints_dependency_revision}")
+  
+  // Put runtime overrides of compile-time dependencies here. Often this will include the runtime() dependencies plus
+  // any overrides of JARs in the normal Kettle classloader. Example:
+  //runtimeWithoutCompile("com.tinkerpop.blueprints:blueprints-core:${project.ext.blueprints_dependency_revision}")
+  //runtimeWithoutCompile('com.fasterxml.jackson.core:jackson-core:2.1.2')
+  
+}
+
+// This task builds a PDI plugin in the correct format, a ZIP with the plugin JAR at the root and a lib/ folder containing
+// all third-party dependencies
+task plugin(dependsOn:jar, type: Zip) {
+  into("${project.name}/") {
+    from jar.outputs.files
+  }
+  
+  // The list of JARs in the lib/ folder is the complement of the intersection of the compile and runtime dependencies,
+  // plus the JARs in the runtimeWithoutCompile config
+  def compileDeps = configurations.compile.resolve()
+  def runtimeDeps = configurations.runtime.resolve()
+  def leftovers = (compileDeps + runtimeDeps) - compileDeps.intersect(runtimeDeps)
+  into("${project.name}/lib") {
+    from leftovers
+    from configurations.runtimeWithoutCompile
+  }
+}
+
+artifacts {
+  zip plugin
+}
+
+task createGradleWrapper(type: Wrapper) {
+  gradleVersion = '1.7'
+}
