@@ -403,7 +403,8 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 		retval.append("    ").append(XMLHandler.addTagValue("dropErrorTable2",	dropErrorTable2));      
 		retval.append("    ").append(XMLHandler.addTagValue("ignoreDupUpdate",		ignoreDupUpdate));      
 		retval.append("    ").append(XMLHandler.addTagValue("insertMissingUpdate",	insertMissingUpdate));      
-		retval.append("    ").append(XMLHandler.addTagValue("ignoreMissingUpdate",	ignoreMissingUpdate));      
+		retval.append("    ").append(XMLHandler.addTagValue("ignoreMissingUpdate",	ignoreMissingUpdate));
+		retval.append("    ").append(XMLHandler.addTagValue("accessLogFile",	accessLogFile));
 		retval.append("    ").append(XMLHandler.addTagValue("updateLogFile",	updateLogFile));      
 		retval.append("    ").append(XMLHandler.addTagValue("fifoFileName",		fifoFileName ));      
 		retval.append("    ").append(XMLHandler.addTagValue("scriptFileName",	scriptFileName ));      
