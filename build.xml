@@ -91,7 +91,7 @@
   <target name="package" depends="stage" description="generate all the kettle plugin jars">
      <echo>Creating the Kettle plugin zip for ${plugin-id} ...</echo>
      <zip destfile="dist/${plugin-id}.zip" 
-          basedir="bin/stage/${plugin-id}"
+          basedir="bin/stage"
           includes="**/*"
           excludes="**/dev-lib/*" />
   </target>
