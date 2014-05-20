@@ -7,10 +7,12 @@
     <conf name="dev"/>
     <conf name="test" visibility="private"/>
     <conf name="source"/>
+    <conf name="zip" />
   </configurations>
 
   <publications>
-    <artifact name="${plugin-id}" type="jar" conf="default"/>
+    <artifact name="${ivy.artifact.id}" type="jar" conf="default" />
+    <artifact name="${package.id}" type="zip" conf="zip" />
   </publications>
 
   <!-- 

@@ -21,7 +21,7 @@
           depends="clean-all,resolve,publish" />
 
   <!-- Import the common_build.xml file which contains all the default tasks -->
-  <import file="build-res/subfloor.xml"/>
+  <import file="build-res/subfloor-pkg.xml"/>
 
   <!--
     AS STATED ABOVE, THE ONLY TASKS THAT SHOULD EXIST IN THIS BUILD FILE ARE
@@ -31,68 +31,40 @@
 
   <!-- create-lib is called since subfloor requires that a lib folder exists -->
   <!-- a lib folder may not exist for a plugin -->
-  <target name="default" depends="clean,init,resolve-dev,resolve,create-lib,dist"/>
+  <target name="default" depends="clean-all,init,resolve,dist"/>
+	
+  <target name="resolve" depends="subfloor.resolve,resolve-dev" />
       
   <target name="create-dot-classpath" depends="init,resolve,subfloor.create-dot-classpath"/>
 
-  <target name="stage" depends="dist" description="generate all the kettle plugin jars">
-      
-  	  <echo>Staging the Kettle plugin ${plugin-id} ...</echo>
-  	
-      <!-- copy plugin jar -->
-      <mkdir dir="bin/stage/${plugin-id}"/>
-      <copy todir="bin/stage/${plugin-id}"  file="dist/${plugin-id}-${project.revision}.jar"/>
-      
-  	  <!-- external libs (jdbc etc) -->
-      <mkdir dir="bin/stage/${plugin-id}/lib"/>
-  	  <if>
-        <available file="lib" type="dir" />
-        <then>
-        	<echo>Copying files from lib....</echo>
-  	        <copy todir="bin/stage/${plugin-id}/lib">
-  	           <fileset dir="lib" includes="**/*"/>
-      	    </copy>
-  	  	</then>
-  	  </if>
-  	
-      <!-- any other res files -->
-      <if>
-          <available file="package-res" />
-          <then>
-             <copy todir="bin/stage/${plugin-id}" >
-                        <fileset dir="package-res" includes="**/*" excludes="**/.vpn"/>
-             </copy>
-            </then>
-          </if>
-                
-            <!-- Update the version.xml with the current version of this plugin -->
-            <if>
-              <available file="bin/stage/${plugin-id}/version.xml" />
-              <then>
-                <replace file="bin/stage/${plugin-id}/version.xml" token="@TRUNK@" value="${project.revision}"/>
-              </then>
-            </if>
-    </target>
-    
-   <!--=======================================================================
-            resolve-dev
-            
-            Resolves for development and compilation.
-       =====================================================================-->
-      <target name="resolve-dev" depends="install-ivy">
-          <ivy:resolve file="${ivyfile}" conf="dev" />
-	      <ivy:retrieve conf="dev" pattern="${devlib.dir}/[module]-[revision](-[classifier]).[ext]" />
-	  </target>
-	
-	<target name="create-lib">
-		<mkdir dir="lib"/>
-	</target>
-	
-  <target name="package" depends="stage" description="generate all the kettle plugin jars">
-     <echo>Creating the Kettle plugin zip for ${plugin-id} ...</echo>
-     <zip destfile="dist/${plugin-id}.zip" 
-          basedir="bin/stage"
-          includes="**/*"
-          excludes="**/dev-lib/*" />
+  <!-- Override assemble.copy-libs to exclude the plugin JAR, that needs to be at the root, not in lib/ -->
+  <target name="assemble.copy-libs">
+    <copy todir="${approot.stage.dir}/lib">
+      <fileset dir="${lib.dir}" />
+    </copy>
+    <copy todir="${approot.stage.dir}">
+      <fileset file="${dist.dir}/${ivy.artifact.id}-${project.revision}.jar" />
+    </copy>
   </target>
+
+  <target name="assemble" depends="install-antcontrib,subfloor-pkg.assemble" description="generate all the kettle plugin jars">
+    <!-- Update the version.xml with the current version of this plugin -->
+    <if>
+      <available file="${approot.stage.dir}/version.xml" />
+      <then>
+        <replace file="${approot.stage.dir}/version.xml" token="@VERSION@" value="${project.revision}"/>
+      </then>
+    </if>
+  </target>
+
+   <!--=======================================================================
+        resolve-dev
+
+        Resolves for development and compilation.
+   =====================================================================-->
+  <target name="resolve-dev" depends="install-ivy">
+      <ivy:resolve file="${ivyfile}" conf="dev" />
+      <ivy:retrieve conf="dev" pattern="${devlib.dir}/[module]-[revision](-[classifier]).[ext]" />
+  </target>
+
 </project>
