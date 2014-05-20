@@ -34,49 +34,47 @@ import org.pentaho.di.trans.steps.teradatabulkloader.TeraDataBulkLoader.TbuildTh
  * Teradata TPT Insert Upsert Bulk Loader<br>
  * <br>
  * Derived from package org.pentaho.di.trans.steps.terafast;<br>
- * Compatible with Kettle 4.4.x
- * <br>
+ * Compatible with Kettle 4.4.x <br>
  * Created on 29-oct-2013<br>
+ * 
  * @author Kevin Hanrahan<br>
  */
 
-public class TeraDataBulkLoaderData extends BaseStepData implements StepDataInterface
-{
-	public Database db;
+public class TeraDataBulkLoaderData extends BaseStepData implements StepDataInterface {
+  public Database db;
 
-	public int    keynrs[];         // nr of keylookup -value in row...
-    
-	public StreamLogger errorLogger;
+  public int[] keynrs; // nr of keylookup -value in row...
 
-	public StreamLogger outputLogger;
+  public StreamLogger errorLogger;
 
-	public byte[] quote     = "'".getBytes();
-	public byte[] separator = ",".getBytes();
-	public byte[] newline;
+  public StreamLogger outputLogger;
 
-	public ValueMetaInterface bulkTimestampMeta;
-	public ValueMetaInterface bulkDateMeta;
-	public ValueMetaInterface bulkNumberMeta;
-	
-	public String schemaTable;
+  public byte[] quote = "'".getBytes();
+  public byte[] separator = ",".getBytes();
+  public byte[] newline;
 
-	public String fifoFilename;
+  public ValueMetaInterface bulkTimestampMeta;
+  public ValueMetaInterface bulkDateMeta;
+  public ValueMetaInterface bulkNumberMeta;
 
-	public DataOutputStream fifoStream;
+  public String schemaTable;
 
-	public ValueMetaInterface[]	bulkFormatMeta;
+  public String fifoFilename;
 
-	public long	bulkSize;
-	
-	public TbuildThread tbuildThread;
-	
-	/**
-	 *  Default constructor.
-	 */
-	public TeraDataBulkLoaderData()
-	{
-		super();
+  public DataOutputStream fifoStream;
 
-		db=null;
-	}
+  public ValueMetaInterface[] bulkFormatMeta;
+
+  public long bulkSize;
+
+  public TbuildThread tbuildThread;
+
+  /**
+   * Default constructor.
+   */
+  public TeraDataBulkLoaderData() {
+    super();
+
+    db = null;
+  }
 }
