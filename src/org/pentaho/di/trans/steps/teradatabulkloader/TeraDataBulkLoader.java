@@ -59,481 +59,427 @@ import org.pentaho.di.core.vfs.KettleVFS;
  * Teradata TPT Insert Upsert Bulk Loader<br>
  * <br>
  * Derived from package org.pentaho.di.trans.steps.terafast;<br>
- * Compatible with Kettle 4.4.x
- * <br>
+ * Compatible with Kettle 4.4.x <br>
  * Created on 29-oct-2013<br>
+ * 
  * @author Kevin Hanrahan<br>
  */
 
-public class TeraDataBulkLoader extends BaseStep implements StepInterface
-{
-	private static Class<?> PKG = TeraDataBulkLoaderMeta.class; // for i18n purposes, needed by Translator2!!   $NON-NLS-1$
+public class TeraDataBulkLoader extends BaseStep implements StepInterface {
+  private static Class<?> PKG = TeraDataBulkLoaderMeta.class; // for i18n purposes, needed by Translator2!! $NON-NLS-1$
 
-	public static String ActionTypes[] = {
-		BaseMessages.getString(PKG, "TeraDataBulkLoaderDialog.Insert.Label"),
-		BaseMessages.getString(PKG, "TeraDataBulkLoaderDialog.Upsert.Label"),
-		};
-	public static String ScriptTypes[] = {
-		BaseMessages.getString(PKG, "TeraDataBulkLoaderDialog.ScriptOptionGenerate.Label"),
-		BaseMessages.getString(PKG, "TeraDataBulkLoaderDialog.ScriptOptionUseExisting.Label")
-	};
+  public static String[] ActionTypes = { BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Insert.Label" ),
+    BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Upsert.Label" ), };
+  public static String[] ScriptTypes = {
+    BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ScriptOptionGenerate.Label" ),
+    BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ScriptOptionUseExisting.Label" ) };
 
-    public static final long DEFAULT_ERROR_CODE = 1L;
+  public static final long DEFAULT_ERROR_CODE = 1L;
 
-	private TeraDataBulkLoaderMeta meta;
-	TeraDataBulkLoaderData data;
-	private final long   threadWaitTime = 300000;
-	private final String threadWaitTimeText = "5min";
-	private String       tempScriptFile;
+  private TeraDataBulkLoaderMeta meta;
+  TeraDataBulkLoaderData data;
+  private final long threadWaitTime = 300000;
+  private final String threadWaitTimeText = "5min";
+  private String tempScriptFile;
 
- 
-
-	public TeraDataBulkLoader(StepMeta stepMeta, StepDataInterface stepDataInterface, int copyNr, TransMeta transMeta, Trans trans)
-	{
-		super(stepMeta, stepDataInterface, copyNr, transMeta, trans);
-	}
-	
-	
-	
-	private void executeLoadCommand() throws Exception {
-
-		TeraDataBulkLoaderRoutines routines = new TeraDataBulkLoaderRoutines(this, this.meta);
-		this.tempScriptFile = routines.createScriptFile();	
-
-		data.tbuildThread = new TbuildThread(this);
-		data.tbuildThread.start();
-	    // Ready to start writing rows to the FIFO file now...
-	    //
-	    if (!Const.isWindows()) {     
-	      logDetailed("Opening fifo " + data.fifoFilename + " for writing.");
-	      OpenFifo openFifo = new OpenFifo(data.fifoFilename, 1000);
-	      openFifo.start();
-	      
-
-	      
-	      // Wait for either the sql statement to throw an error or the
-	      // fifo writer to throw an error
-	      while (true) {
-	        openFifo.join(200);
-	        if (openFifo.getState() == Thread.State.TERMINATED)
-	          break;
-
-	        try {
-	          data.tbuildThread.checkExcn();
-	        } catch (Exception e) {
-	          // We need to open a stream to the fifo to unblock the fifo writer
-	          // that was waiting for the thread that now isn't running
-	          new DataInputStream(new FileInputStream(data.fifoFilename)).close();
-	          openFifo.join();
-	          logError("Execution error in tbuild: "+e);
-	          throw e;
-	        }
-
-	        try {
-	          openFifo.checkExcn();
-	        } catch (Exception e) {
-	          throw e;
-	        }
-	      }
-	      data.fifoStream = openFifo.getFifoStream();
-	    }
-
-	  }
-	
-	
-	
-	public boolean execute(TeraDataBulkLoaderMeta meta) throws KettleException
-	{
-        Runtime rt = Runtime.getRuntime();
-
-        try  
-        {
-           	// 1) Create the FIFO file using the "mkfifo" command...
-        	//    Make sure to log all the possible output, also from STDERR
-        	//
-        	data.fifoFilename = environmentSubstitute(meta.getFifoFileName());
-        	data.fifoFilename += "." + new Random().nextInt(2139999999);
-        	
-        	File fifoFile = new File(data.fifoFilename);
-        	if (!fifoFile.exists()) {
-        		// MKFIFO!
-        		//
-	        	String mkFifoCmd = "mkfifo "+data.fifoFilename;
-	        	logDetailed("Creating FIFO file using this command : "+mkFifoCmd);
-	        	Process mkFifoProcess = rt.exec(mkFifoCmd);
-	        	StreamLogger errorLogger = new StreamLogger(log, mkFifoProcess.getErrorStream(), "mkFifoError");
-	        	StreamLogger outputLogger = new StreamLogger(log, mkFifoProcess.getInputStream(), "mkFifoOuptut");
-	        	new Thread(errorLogger).start();
-	        	new Thread(outputLogger).start();
-	        	int result = mkFifoProcess.waitFor();
-	        	if (result!=0) {
-	        		throw new Exception("Return code "+result+" received from statement : "+mkFifoCmd);
-	        	}
-
-	        	String chmodCmd = "chmod 666 "+data.fifoFilename;
-	        	logDetailed("Setting FIFO file permissings using this command : "+chmodCmd);
-	        	Process chmodProcess = rt.exec(chmodCmd);
-	        	errorLogger = new StreamLogger(log, chmodProcess.getErrorStream(), "chmodError");
-	        	outputLogger = new StreamLogger(log, chmodProcess.getInputStream(), "chmodOuptut");
-	        	new Thread(errorLogger).start();
-	        	new Thread(outputLogger).start();
-	        	result = chmodProcess.waitFor();
-	        	if (result!=0) {
-	        		throw new Exception("Return code "+result+" received from statement : "+chmodCmd);
-	        	}
-        	}
-            // 3) Now we are ready to run the load command...
-            //
-            executeLoadCommand();            
-        }
-        catch ( Exception ex )
-        {
-        	throw new KettleException(ex);
-        }
-        
-        return true;
-	}
-
-    /**
-     * Create the command line for a tbuild process depending on the meta information supplied.
-     * 
-     * @return The string to execute.
-     * 
-     * @throws KettleException
-     *             Upon any exception
-     */
-    public String createCommandLine() throws KettleException {
-        if (StringUtils.isBlank(this.meta.getTbuildPath())) {
-            throw new KettleException("tbuild path not set");
-        }
-        final StringBuilder builder = new StringBuilder();
-        try {
-            final FileObject fileObject = KettleVFS.getFileObject(environmentSubstitute(this.meta.getTbuildPath()));
-            final String tbuildExec = KettleVFS.getFilename(fileObject);
-            builder.append(tbuildExec + " ");
-            //  Add command line args as appropriate for generated or existing script
-            builder.append("-f " + this.tempScriptFile + " ");
-            if (this.meta.getGenerateScript()){   
-            	// no other args here
-            }else{
-            	String varfile = this.meta.getVariableFile();
-            	if (varfile != null && !varfile.equals("")){
-            		builder.append("-v " + varfile + " ");
-            	}
-            }
-            builder.append(this.meta.getJobName());
-        } catch (Exception e) {
-            throw new KettleException("Error retrieving tbuild application string", e);
-        }
-        // Add log error log, if set.
-        return builder.toString();
-    }
-
-    public String[] createEnvironmentVariables(){
-    	List<String> varlist = new ArrayList<String>();
-    	StringAppender libpath = new StringAppender();
-    	
-    	varlist.add("TWB_ROOT="+this.meta.getTwbRoot());
-    	varlist.add("COPLIB="+this.meta.getCopLibPath());
-    	varlist.add("COPERR="+this.meta.getCopLibPath());
-    	libpath.append(this.meta.getLibPath() + ":");
-    	libpath.append(this.meta.getTbuildLibPath() + ":");
-    	libpath.append(this.meta.getTdicuLibPath() + ":");
-    	libpath.append(this.meta.getLibPath() + "64:");
-    	libpath.append(this.meta.getTbuildLibPath() + "64:");
-    	libpath.append(this.meta.getTdicuLibPath() + "64:");
-    	varlist.add("LD_LIBRARY_PATH="+libpath.toString());
-    	return (String[]) varlist.toArray(new String[varlist.size()]);
-    }
- 
-  static class TbuildThread extends Thread
-  {
-      private TeraDataBulkLoader     	parent;
-      private String                	command;
-      private String[]					environment;
-      private Process  					process;
-      private int                       exitValue;
-      private Exception ex;
-      
-      TbuildThread(TeraDataBulkLoader parent) throws KettleException
-      {
-          this.parent  = parent;
-          this.command = parent.createCommandLine();
-          this.environment = parent.createEnvironmentVariables();
-          
-      }
-      
-      public void run()
-      {
-    	  StringBuilder errors = new StringBuilder();
-
-    	  parent.logBasic("Running tbuild command: " + command);
-    	  parent.logBasic("Env: " + StringUtils.join(environment,":"));
-
-    	  try {
-    		  this.process = Runtime.getRuntime().exec(command,environment);
-    		  InputStream tbuildOutput = this.process.getInputStream();
-    		  DataInputStream in = new DataInputStream(tbuildOutput);
-    		  BufferedReader  br = new BufferedReader(new InputStreamReader(in));
-     		  String strLine;
-    		  while ((strLine = br.readLine()) != null)   {
-    			  parent.logDetailed(strLine);
-    			  if (strLine.matches("(?i:.*ERROR.*)")){
-    				  errors.append(strLine + "\n");
-    			  }
-    		  }
-    		  exitValue = process.waitFor();
-    		  if (exitValue > 0){
-    			  this.ex = new KettleException("Tbuild process exited with code " + exitValue + "\n" + errors.toString());
-    		  }
-    	  } catch (Exception e) {
-    		  this.ex = e;
-    	  }
- 
-      }
-
-      void checkExcn() throws Exception
-      {
-          // This is called from the main thread context to rethrow any saved
-          // excn.
-          if (ex != null) {
-              throw ex;
-          }
-      }
+  public TeraDataBulkLoader( StepMeta stepMeta, StepDataInterface stepDataInterface, int copyNr, TransMeta transMeta,
+      Trans trans ) {
+    super( stepMeta, stepDataInterface, copyNr, transMeta, trans );
   }
-  
-  
-  
-  
-	public boolean processRow(StepMetaInterface smi, StepDataInterface sdi) throws KettleException
-	{
-		meta=(TeraDataBulkLoaderMeta)smi;
-		data=(TeraDataBulkLoaderData)sdi;
 
-		try
-		{
-			
-			Object[] r=getRow();  // Get row from input rowset & set row busy!
-			if (r==null)          // no more input to be expected...
-			{
-				closeOutput();
-				setOutputDone();
-				return false;
-			}
-			
-			if (first)
-			{
-				first=false;
-				// Cache field indexes.
-				//
-				data.keynrs = new int[meta.getFieldStream().length];
-				for (int i=0;i<data.keynrs.length;i++) {
-					data.keynrs[i] = getInputRowMeta().indexOfValue(meta.getFieldStream()[i]);
-				}
-				
-				data.bulkFormatMeta = new ValueMetaInterface[data.keynrs.length];
-				// execute the client statement...
-				//
-				System.out.println("Running meta:"+meta);
-				execute(meta);
-			}
+  private void executeLoadCommand() throws Exception {
 
+    TeraDataBulkLoaderRoutines routines = new TeraDataBulkLoaderRoutines( this, this.meta );
+    this.tempScriptFile = routines.createScriptFile();
 
-			writeRowToBulk(getInputRowMeta(), r);
-			putRow(getInputRowMeta(), r);
-			incrementLinesOutput();
-			return true;
-		}
-		catch(Exception e)
-		{
-			logError(BaseMessages.getString(PKG, "TeraDataBulkLoader.Log.ErrorInStep"), e); 
-			setErrors(1);
-			stopAll();
-			setOutputDone();  // signal end to receiver(s)
-			return false;
-		} 
-	}
+    data.tbuildThread = new TbuildThread( this );
+    data.tbuildThread.start();
+    // Ready to start writing rows to the FIFO file now...
+    //
+    if ( !Const.isWindows() ) {
+      logDetailed( "Opening fifo " + data.fifoFilename + " for writing." );
+      OpenFifo openFifo = new OpenFifo( data.fifoFilename, 1000 );
+      openFifo.start();
 
-	
-	
-	
-	private void closeOutput() throws Exception 
-	{
-
-		if (data.fifoStream != null) {
-			// Close the fifo file...
-			//
-			data.fifoStream.close();
-			data.fifoStream=null;
-		}
-		if (data.tbuildThread !=null) {
-			
-	        // wait for the thread to finish and check for any error and/or warning...
-			logBasic("Waiting up to " + this.threadWaitTimeText + " for the tbuild command thread to finish processing.");
-	        data.tbuildThread.join(this.threadWaitTime);
-	        TbuildThread tbuildThread = data.tbuildThread;
-	        data.tbuildThread = null;
-	        tbuildThread.checkExcn();
-		}
-	}
-
-	
-	private void writeRowToBulk(RowMetaInterface rowMeta, Object[] r) throws KettleException {
-
-    	try {
-    		for (int i=0;i<data.keynrs.length;i++) {
-	    		int index = data.keynrs[i];
-	    		ValueMetaInterface valueMeta = rowMeta.getValueMeta(index);
-	    		Object valueData = r[index];
-	    		
-
-	    		switch(valueMeta.getType()) {
-	    		case ValueMetaInterface.TYPE_STRING :
-	    			data.fifoStream.write(TeraDataBulkLoaderRoutines.convertVarchar(valueMeta.getString(valueData)));
-	    			break;
-	    		case ValueMetaInterface.TYPE_INTEGER:
-	    			data.fifoStream.write(TeraDataBulkLoaderRoutines.convertLong(valueMeta.getInteger(valueData)));
-	    			break;
-	    		case ValueMetaInterface.TYPE_DATE:
-	    			Date date = valueMeta.getDate(valueData);
-	    			data.fifoStream.write(TeraDataBulkLoaderRoutines.convertDateTime(date));
-	    			break;
-	    		case ValueMetaInterface.TYPE_BOOLEAN:
-	    			Boolean b= valueMeta.getBoolean(valueData);
-	    			data.fifoStream.write(TeraDataBulkLoaderRoutines.convertBoolean(b));
-	    			break;
-	    		case ValueMetaInterface.TYPE_NUMBER:
-	    			Double d = valueMeta.getNumber(valueData);
-	    			data.fifoStream.write(TeraDataBulkLoaderRoutines.convertFloat(d));
-	    			break;
-	    		case ValueMetaInterface.TYPE_BIGNUMBER:
-	    			BigDecimal bn = valueMeta.getBigNumber(valueData);
-	    			data.fifoStream.write(TeraDataBulkLoaderRoutines.convertBignum(bn));
-	    			break;
-	    		default:
-	    			logError("This is seen when a type in the PDI stream is not handleed by the step.  Type is "+valueMeta.getType());
-	    			throw new KettleException("Unsupported type in stream");
-	    		}
-    		}
-			
-    	}
-    	catch(IOException e)
-    	{
-    		// If something went wrong with writing to the fifo, get the underlying error from MySQL  
-    		try{
-    			logError("IOException writing to fifo.  Waiting up to " + this.threadWaitTimeText + " for the tbuild command thread to return with the error.");
-    		}
-    		catch (Exception loadEx){
-         		logError("Caught Loadex error :"+ loadEx);
-    			throw new KettleException("loadEx Error serializing rows of data to the fifo file 1", loadEx);
-    		}
-    		
-			// throw the generic "Pipe" exception.
-    		logError("Caught IO error (pipe?):"+ e);
-			throw new KettleException("IO Error serializing rows of data to the fifo file 2", e);
-
-    	}
-    	catch (Exception e2){ 
-    		logError("Caught some error :"+ e2);
-    		// Null pointer exceptions etc.
-    		throw new KettleException("Error serializing rows of data to the fifo file", e2);
-    	}
-	}
-
-
-	
-	
-	
-	
-	
-	public boolean init(StepMetaInterface smi, StepDataInterface sdi)
-	{
-		meta=(TeraDataBulkLoaderMeta)smi;
-		data=(TeraDataBulkLoaderData)sdi;
-
-		if (super.init(smi, sdi))
-		{			
-			return true;
-		}
-		return false;
-	}
-
-	public void dispose(StepMetaInterface smi, StepDataInterface sdi)
-	{
-	    meta = (TeraDataBulkLoaderMeta)smi;
-	    data = (TeraDataBulkLoaderData)sdi;
-
-	    // Close the output streams if still needed.
-	    //
-	    try {
-	    	if (data.fifoStream!=null) {
-	    		data.fifoStream.close();
-	    	}
-
-
-            if (data.db!=null) {
-                data.db.disconnect();
-                data.db = null;
-            }
-            
-            // remove the fifo file...
-            //
-            try {
-            	if (data.fifoFilename!=null) {
-            		new File(data.fifoFilename).delete();
-            	}
-            } catch(Exception e) {
-            	logError("Unable to delete FIFO file : "+data.fifoFilename, e);
-            }
-	    }
-	    catch(Exception e) {
-	    	setErrors(1L);
-	    	logError("Unexpected error encountered while closing the client connection", e);
-	    }
-	    
-	    super.dispose(smi, sdi);
-	}
-	
-	// Class to try and open a writer to a fifo in a different thread.
-	// Opening the fifo is a blocking call, so we need to check for errors
-	// after a small waiting period
-	static class OpenFifo extends Thread
-	{
-		private DataOutputStream fifoStream = null;
-		private Exception ex;
-		private String fifoName;
-		@SuppressWarnings("unused")
-		private int size;
-	       
-		OpenFifo(String fifoName, int size)
-        {
-			this.fifoName = fifoName;
-			this.size = size;
+      // Wait for either the sql statement to throw an error or the
+      // fifo writer to throw an error
+      while ( true ) {
+        openFifo.join( 200 );
+        if ( openFifo.getState() == Thread.State.TERMINATED ) {
+          break;
         }
-		
-		public void run()
-	    {
-			try{
-				fifoStream = new DataOutputStream( new FileOutputStream( OpenFifo.this.fifoName ));
-			} catch (Exception ex) {
-                this.ex = ex;
-            }
+
+        try {
+          data.tbuildThread.checkExcn();
+        } catch ( Exception e ) {
+          // We need to open a stream to the fifo to unblock the fifo writer
+          // that was waiting for the thread that now isn't running
+          new DataInputStream( new FileInputStream( data.fifoFilename ) ).close();
+          openFifo.join();
+          logError( "Execution error in tbuild: " + e );
+          throw e;
         }
-		
-		void checkExcn() throws Exception
-        {
-            // This is called from the main thread context to rethrow any saved
-            // excn.
-            if (ex != null) {
-                throw ex;
-            }
+
+        try {
+          openFifo.checkExcn();
+        } catch ( Exception e ) {
+          throw e;
         }
-		
-		DataOutputStream getFifoStream(){
-			return fifoStream;
-		}
-	}
-	   
-	
- 
+      }
+      data.fifoStream = openFifo.getFifoStream();
+    }
+
+  }
+
+  public boolean execute( TeraDataBulkLoaderMeta meta ) throws KettleException {
+    Runtime rt = Runtime.getRuntime();
+
+    try {
+      // 1) Create the FIFO file using the "mkfifo" command...
+      // Make sure to log all the possible output, also from STDERR
+      //
+      data.fifoFilename = environmentSubstitute( meta.getFifoFileName() );
+      data.fifoFilename += "." + new Random().nextInt( 2139999999 );
+
+      File fifoFile = new File( data.fifoFilename );
+      if ( !fifoFile.exists() ) {
+        // MKFIFO!
+        //
+        String mkFifoCmd = "mkfifo " + data.fifoFilename;
+        logDetailed( "Creating FIFO file using this command : " + mkFifoCmd );
+        Process mkFifoProcess = rt.exec( mkFifoCmd );
+        StreamLogger errorLogger = new StreamLogger( log, mkFifoProcess.getErrorStream(), "mkFifoError" );
+        StreamLogger outputLogger = new StreamLogger( log, mkFifoProcess.getInputStream(), "mkFifoOuptut" );
+        new Thread( errorLogger ).start();
+        new Thread( outputLogger ).start();
+        int result = mkFifoProcess.waitFor();
+        if ( result != 0 ) {
+          throw new Exception( "Return code " + result + " received from statement : " + mkFifoCmd );
+        }
+
+        String chmodCmd = "chmod 666 " + data.fifoFilename;
+        logDetailed( "Setting FIFO file permissings using this command : " + chmodCmd );
+        Process chmodProcess = rt.exec( chmodCmd );
+        errorLogger = new StreamLogger( log, chmodProcess.getErrorStream(), "chmodError" );
+        outputLogger = new StreamLogger( log, chmodProcess.getInputStream(), "chmodOuptut" );
+        new Thread( errorLogger ).start();
+        new Thread( outputLogger ).start();
+        result = chmodProcess.waitFor();
+        if ( result != 0 ) {
+          throw new Exception( "Return code " + result + " received from statement : " + chmodCmd );
+        }
+      }
+      // 3) Now we are ready to run the load command...
+      //
+      executeLoadCommand();
+    } catch ( Exception ex ) {
+      throw new KettleException( ex );
+    }
+
+    return true;
+  }
+
+  /**
+   * Create the command line for a tbuild process depending on the meta information supplied.
+   * 
+   * @return The string to execute.
+   * 
+   * @throws KettleException
+   *           Upon any exception
+   */
+  public String createCommandLine() throws KettleException {
+    if ( StringUtils.isBlank( this.meta.getTbuildPath() ) ) {
+      throw new KettleException( "tbuild path not set" );
+    }
+    final StringBuilder builder = new StringBuilder();
+    try {
+      final FileObject fileObject = KettleVFS.getFileObject( environmentSubstitute( this.meta.getTbuildPath() ) );
+      final String tbuildExec = KettleVFS.getFilename( fileObject );
+      builder.append( tbuildExec + " " );
+      // Add command line args as appropriate for generated or existing script
+      builder.append( "-f " + this.tempScriptFile + " " );
+      if ( !this.meta.getGenerateScript() ) {
+
+        String varfile = this.meta.getVariableFile();
+        if ( varfile != null && !varfile.equals( "" ) ) {
+          builder.append( "-v " + varfile + " " );
+        }
+      }
+      builder.append( this.meta.getJobName() );
+    } catch ( Exception e ) {
+      throw new KettleException( "Error retrieving tbuild application string", e );
+    }
+    // Add log error log, if set.
+    return builder.toString();
+  }
+
+  public String[] createEnvironmentVariables() {
+    List<String> varlist = new ArrayList<String>();
+    StringAppender libpath = new StringAppender();
+
+    varlist.add( "TWB_ROOT=" + this.meta.getTwbRoot() );
+    varlist.add( "COPLIB=" + this.meta.getCopLibPath() );
+    varlist.add( "COPERR=" + this.meta.getCopLibPath() );
+    libpath.append( this.meta.getLibPath() + ":" );
+    libpath.append( this.meta.getTbuildLibPath() + ":" );
+    libpath.append( this.meta.getTdicuLibPath() + ":" );
+    libpath.append( this.meta.getLibPath() + "64:" );
+    libpath.append( this.meta.getTbuildLibPath() + "64:" );
+    libpath.append( this.meta.getTdicuLibPath() + "64:" );
+    varlist.add( "LD_LIBRARY_PATH=" + libpath.toString() );
+    return (String[]) varlist.toArray( new String[varlist.size()] );
+  }
+
+  static class TbuildThread extends Thread {
+    private TeraDataBulkLoader parent;
+    private String command;
+    private String[] environment;
+    private Process process;
+    private int exitValue;
+    private Exception ex;
+
+    TbuildThread( TeraDataBulkLoader parent ) throws KettleException {
+      this.parent = parent;
+      this.command = parent.createCommandLine();
+      this.environment = parent.createEnvironmentVariables();
+
+    }
+
+    public void run() {
+      StringBuilder errors = new StringBuilder();
+
+      parent.logBasic( "Running tbuild command: " + command );
+      parent.logBasic( "Env: " + StringUtils.join( environment, ":" ) );
+
+      try {
+        this.process = Runtime.getRuntime().exec( command, environment );
+        InputStream tbuildOutput = this.process.getInputStream();
+        DataInputStream in = new DataInputStream( tbuildOutput );
+        BufferedReader br = new BufferedReader( new InputStreamReader( in ) );
+        String strLine;
+        while ( ( strLine = br.readLine() ) != null ) {
+          parent.logDetailed( strLine );
+          if ( strLine.matches( "(?i:.*ERROR.*)" ) ) {
+            errors.append( strLine + "\n" );
+          }
+        }
+        exitValue = process.waitFor();
+        if ( exitValue > 0 ) {
+          this.ex = new KettleException( "Tbuild process exited with code " + exitValue + "\n" + errors.toString() );
+        }
+      } catch ( Exception e ) {
+        this.ex = e;
+      }
+
+    }
+
+    void checkExcn() throws Exception {
+      // This is called from the main thread context to rethrow any saved
+      // excn.
+      if ( ex != null ) {
+        throw ex;
+      }
+    }
+  }
+
+  public boolean processRow( StepMetaInterface smi, StepDataInterface sdi ) throws KettleException {
+    meta = (TeraDataBulkLoaderMeta) smi;
+    data = (TeraDataBulkLoaderData) sdi;
+
+    try {
+
+      Object[] r = getRow(); // Get row from input rowset & set row busy!
+      if ( r == null ) {
+        // no more input to be expected...
+        closeOutput();
+        setOutputDone();
+        return false;
+      }
+
+      if ( first ) {
+        first = false;
+        // Cache field indexes.
+        //
+        data.keynrs = new int[meta.getFieldStream().length];
+        for ( int i = 0; i < data.keynrs.length; i++ ) {
+          data.keynrs[i] = getInputRowMeta().indexOfValue( meta.getFieldStream()[i] );
+        }
+
+        data.bulkFormatMeta = new ValueMetaInterface[data.keynrs.length];
+        // execute the client statement...
+        //
+        System.out.println( "Running meta:" + meta );
+        execute( meta );
+      }
+
+      writeRowToBulk( getInputRowMeta(), r );
+      putRow( getInputRowMeta(), r );
+      incrementLinesOutput();
+      return true;
+    } catch ( Exception e ) {
+      logError( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.ErrorInStep" ), e );
+      setErrors( 1 );
+      stopAll();
+      setOutputDone(); // signal end to receiver(s)
+      return false;
+    }
+  }
+
+  private void closeOutput() throws Exception {
+
+    if ( data.fifoStream != null ) {
+      // Close the fifo file...
+      //
+      data.fifoStream.close();
+      data.fifoStream = null;
+    }
+    if ( data.tbuildThread != null ) {
+
+      // wait for the thread to finish and check for any error and/or warning...
+      logBasic( "Waiting up to " + this.threadWaitTimeText + " for the tbuild command thread to finish processing." );
+      data.tbuildThread.join( this.threadWaitTime );
+      TbuildThread tbuildThread = data.tbuildThread;
+      data.tbuildThread = null;
+      tbuildThread.checkExcn();
+    }
+  }
+
+  private void writeRowToBulk( RowMetaInterface rowMeta, Object[] r ) throws KettleException {
+
+    try {
+      for ( int i = 0; i < data.keynrs.length; i++ ) {
+        int index = data.keynrs[i];
+        ValueMetaInterface valueMeta = rowMeta.getValueMeta( index );
+        Object valueData = r[index];
+
+        switch ( valueMeta.getType() ) {
+          case ValueMetaInterface.TYPE_STRING:
+            data.fifoStream.write( TeraDataBulkLoaderRoutines.convertVarchar( valueMeta.getString( valueData ) ) );
+            break;
+          case ValueMetaInterface.TYPE_INTEGER:
+            data.fifoStream.write( TeraDataBulkLoaderRoutines.convertLong( valueMeta.getInteger( valueData ) ) );
+            break;
+          case ValueMetaInterface.TYPE_DATE:
+            Date date = valueMeta.getDate( valueData );
+            data.fifoStream.write( TeraDataBulkLoaderRoutines.convertDateTime( date ) );
+            break;
+          case ValueMetaInterface.TYPE_BOOLEAN:
+            Boolean b = valueMeta.getBoolean( valueData );
+            data.fifoStream.write( TeraDataBulkLoaderRoutines.convertBoolean( b ) );
+            break;
+          case ValueMetaInterface.TYPE_NUMBER:
+            Double d = valueMeta.getNumber( valueData );
+            data.fifoStream.write( TeraDataBulkLoaderRoutines.convertFloat( d ) );
+            break;
+          case ValueMetaInterface.TYPE_BIGNUMBER:
+            BigDecimal bn = valueMeta.getBigNumber( valueData );
+            data.fifoStream.write( TeraDataBulkLoaderRoutines.convertBignum( bn ) );
+            break;
+          default:
+            logError( "This is seen when a type in the PDI stream is not handleed by the step.  Type is "
+                + valueMeta.getType() );
+            throw new KettleException( "Unsupported type in stream" );
+        }
+      }
+
+    } catch ( IOException e ) {
+      // If something went wrong with writing to the fifo, get the underlying error from MySQL
+      try {
+        logError( "IOException writing to fifo.  Waiting up to " + this.threadWaitTimeText
+            + " for the tbuild command thread to return with the error." );
+      } catch ( Exception loadEx ) {
+        logError( "Caught Loadex error :" + loadEx );
+        throw new KettleException( "loadEx Error serializing rows of data to the fifo file 1", loadEx );
+      }
+
+      // throw the generic "Pipe" exception.
+      logError( "Caught IO error (pipe?):" + e );
+      throw new KettleException( "IO Error serializing rows of data to the fifo file 2", e );
+
+    } catch ( Exception e2 ) {
+      logError( "Caught some error :" + e2 );
+      // Null pointer exceptions etc.
+      throw new KettleException( "Error serializing rows of data to the fifo file", e2 );
+    }
+  }
+
+  public boolean init( StepMetaInterface smi, StepDataInterface sdi ) {
+    meta = (TeraDataBulkLoaderMeta) smi;
+    data = (TeraDataBulkLoaderData) sdi;
+
+    if ( super.init( smi, sdi ) ) {
+      return true;
+    }
+    return false;
+  }
+
+  public void dispose( StepMetaInterface smi, StepDataInterface sdi ) {
+    meta = (TeraDataBulkLoaderMeta) smi;
+    data = (TeraDataBulkLoaderData) sdi;
+
+    // Close the output streams if still needed.
+    //
+    try {
+      if ( data.fifoStream != null ) {
+        data.fifoStream.close();
+      }
+
+      if ( data.db != null ) {
+        data.db.disconnect();
+        data.db = null;
+      }
+
+      // remove the fifo file...
+      //
+      try {
+        if ( data.fifoFilename != null ) {
+          new File( data.fifoFilename ).delete();
+        }
+      } catch ( Exception e ) {
+        logError( "Unable to delete FIFO file : " + data.fifoFilename, e );
+      }
+    } catch ( Exception e ) {
+      setErrors( 1L );
+      logError( "Unexpected error encountered while closing the client connection", e );
+    }
+
+    super.dispose( smi, sdi );
+  }
+
+  // Class to try and open a writer to a fifo in a different thread.
+  // Opening the fifo is a blocking call, so we need to check for errors
+  // after a small waiting period
+  static class OpenFifo extends Thread {
+    private DataOutputStream fifoStream = null;
+    private Exception ex;
+    private String fifoName;
+    @SuppressWarnings( "unused" )
+    private int size;
+
+    OpenFifo( String fifoName, int size ) {
+      this.fifoName = fifoName;
+      this.size = size;
+    }
+
+    public void run() {
+      try {
+        fifoStream = new DataOutputStream( new FileOutputStream( OpenFifo.this.fifoName ) );
+      } catch ( Exception ex ) {
+        this.ex = ex;
+      }
+    }
+
+    void checkExcn() throws Exception {
+      // This is called from the main thread context to rethrow any saved
+      // excn.
+      if ( ex != null ) {
+        throw ex;
+      }
+    }
+
+    DataOutputStream getFifoStream() {
+      return fifoStream;
+    }
+  }
+
 }
