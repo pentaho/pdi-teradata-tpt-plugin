@@ -22,10 +22,6 @@
 
 package org.pentaho.di.ui.trans.steps.teradatabulkloader;
 
-import org.pentaho.di.trans.steps.teradatabulkloader.TeraDataBulkLoader;
-import org.pentaho.di.trans.steps.teradatabulkloader.TeraDataBulkLoaderRoutines;
-
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,19 +30,35 @@ import java.util.Set;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CCombo;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
-import org.eclipse.swt.widgets.*;
-import org.eclipse.swt.layout.*;
-import org.eclipse.swt.custom.*;
-
-
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Text;
 import org.pentaho.di.core.Const;
-import org.pentaho.di.core.SQLStatement;
+import org.pentaho.di.core.Props;
 import org.pentaho.di.core.SourceToTargetMapping;
 import org.pentaho.di.core.database.Database;
 import org.pentaho.di.core.database.DatabaseMeta;
@@ -59,9 +71,10 @@ import org.pentaho.di.trans.step.BaseStepMeta;
 import org.pentaho.di.trans.step.StepDialogInterface;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
+import org.pentaho.di.trans.steps.teradatabulkloader.TeraDataBulkLoader;
 import org.pentaho.di.trans.steps.teradatabulkloader.TeraDataBulkLoaderMeta;
+import org.pentaho.di.trans.steps.teradatabulkloader.TeraDataBulkLoaderRoutines;
 import org.pentaho.di.ui.core.database.dialog.DatabaseExplorerDialog;
-import org.pentaho.di.ui.core.database.dialog.SQLEditor;
 import org.pentaho.di.ui.core.dialog.EnterMappingDialog;
 import org.pentaho.di.ui.core.dialog.ErrorDialog;
 import org.pentaho.di.ui.core.gui.GUIResource;
@@ -89,7 +102,6 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 
 	/*  The "useful" widgets are listed first for clarity.  Associated labels, buttons form data follow......   */
 	/*************************** These variables are common to both generated and existing scripts ***************/
-	private TextVarMenuItem		wTmpStepname;
 	private CCombo				wConnection;
 
 	CTabFolder fItemSet = null; 
@@ -345,19 +357,19 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 			label.setLayoutData(fdl);
 			
 			
-			composite = new Composite(parent, SWT.BORDER);
+			composite = new Composite(parent, SWT.NONE);
 			composite.setLayout (new FormLayout ());
 
 			FormData fdc = new FormData();
-			fdc.left  = new FormAttachment(middle, margin);
+			fdc.left  = new FormAttachment(label, 0);
 			if (top == null){
-				fdc.top   = new FormAttachment(0, margin);
+				fdc.top   = new FormAttachment(0, 0);
 			}else{
-				fdc.top   = new FormAttachment(top, margin);
+				fdc.top   = new FormAttachment(top, 0);
 			}
-			fdc.right = new FormAttachment(100, -margin);
+			fdc.right = new FormAttachment(100, 0);
 			composite.setLayoutData(fdc);
-
+			props.setLook( composite );
 		}
 
 		public Composite getComposite() {
@@ -373,6 +385,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 				fd.left = new FormAttachment(0,margin);
 			}
 			item.setLayoutData(fd);
+			props.setLook( item );
 			items.add(item); 
 		}
 
@@ -397,17 +410,13 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 			return button;
 		}
 		
-		public RadioComposite addRadioComposite(String[] labels, int opts, final Object p, final Method callback){
+		public RadioComposite addRadioComposite(String[] labels, int opts, final Object p, final Runnable callback){
 			RadioComposite rc = new RadioComposite(composite, opts);
 			rc.setLayout (new RowLayout ());
 			if (callback != null){
 				rc.addListener(new Listener() {
 					public void handleEvent (Event event) {
-						try {
-							callback.invoke(p);
-						} catch (Exception e) {
-							e.printStackTrace();
-						} 
+						callback.run();
 					}
 				});
 			}
@@ -586,15 +595,48 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 
 		int middle = props.getMiddlePct();
 		int margin = Const.MARGIN;
+
+    // Stepname line
+    wlStepname = new Label( shell, SWT.RIGHT );
+    wlStepname.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Stepname.Label" ) );
+    props.setLook( wlStepname );
+    fdlStepname = new FormData();
+    fdlStepname.left = new FormAttachment( 0, 0 );
+    fdlStepname.right = new FormAttachment( middle, -margin );
+    fdlStepname.top = new FormAttachment( 0, margin );
+    wlStepname.setLayoutData( fdlStepname );
+    wStepname = new Text(shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+    wStepname.setText(stepname);
+    props.setLook( wStepname );
+    wStepname.addModifyListener( lsMod );
+    fdStepname = new FormData();
+    fdStepname.left = new FormAttachment( middle, 0 );
+    fdStepname.top = new FormAttachment( 0, margin );
+    fdStepname.right = new FormAttachment( 100, 0 );
+    wStepname.setLayoutData( fdStepname );
 		
-		
+    // Connection line
+    wConnection = addConnectionLine( shell, wStepname, middle, margin );
+    if ( input.getDatabaseMeta() == null && transMeta.nrDatabases() == 1 ) {
+      wConnection.select( 0 );
+    }
+    wConnection.addModifyListener( lsMod );
+
+    //  Generate or Use Script File
+    CompositeMenuItem wScriptOption = new CompositeMenuItem(shell, wConnection, "TeraDataBulkLoaderDialog.ScriptOption.Label", 0);
+    cScriptOption = wScriptOption.addRadioComposite(TeraDataBulkLoader.ScriptTypes, SWT.NO_RADIO_GROUP, this, new Runnable() {
+      
+      @Override
+      public void run() {
+        disableInputs();
+      }
+    });
 // Composite groups and folder
 // Shell contains cCommonItems and fItemSet folder.
 // fItemSet folder contains Script and Execution tabs, and the composites cExecutionScriptItems and cExecutionItems
-// 
 
-		Composite cCommonItems = new Composite(shell, SWT.BORDER);
 		fItemSet = new CTabFolder(shell, SWT.BORDER);
+		props.setLook( fItemSet, Props.WIDGET_STYLE_TAB );
 
 		tiExecutionItems     = new CTabItem(fItemSet, SWT.NONE);
 
@@ -602,8 +644,6 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 		cUseScriptItems = new Composite(fItemSet, SWT.BORDER);
 		cGenScriptControlItems = new Composite(fItemSet, SWT.BORDER);
 		cGenScriptFields = new Composite(fItemSet, SWT.BORDER);
-
-		cCommonItems.setLayout (new FormLayout ());
 		cExecutionItems.setLayout (new FormLayout ());
 		cUseScriptItems.setLayout (new FormLayout ());
 		cGenScriptControlItems.setLayout (new FormLayout ());
@@ -613,7 +653,6 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 		props.setLook(cGenScriptFields);
 		props.setLook(cUseScriptItems);
 		props.setLook(cExecutionItems);
-		props.setLook(cCommonItems);
 
 		tiExecutionItems.setControl(cExecutionItems);
 		/************************************************************/
@@ -630,25 +669,11 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 
 		tiExecutionItems.setText(BaseMessages.getString(PKG, "TeraDataBulkLoaderDialog.ExecutionTab.Label"));
 		fItemSet.setSelection(tiExecutionItems);
-
-		FormData fdItemSet       = new FormData();
-		fdItemSet.left  = new FormAttachment(0, margin);
-		fdItemSet.top   = new FormAttachment(cCommonItems, margin);
-		fdItemSet.right = new FormAttachment(100, -margin);
-		fdItemSet.bottom = new FormAttachment(100, -margin * 7);
-		fItemSet.setLayoutData(fdItemSet);			
-		props.setLook(fItemSet);
-		
-		FormData fdCommonItems       = new FormData();
-		fdCommonItems.left  = new FormAttachment(0, margin);
-		fdCommonItems.top   = new FormAttachment(0, margin);
-		fdCommonItems.right = new FormAttachment(100, -margin);
-		cCommonItems.setLayoutData(fdCommonItems);			
 		
 		
 		FormData fdExecutionItems       = new FormData();
 		fdExecutionItems.left  = new FormAttachment(0, margin);
-		fdExecutionItems.top   = new FormAttachment(cCommonItems, margin);
+		fdExecutionItems.top   = new FormAttachment(wScriptOption.getComposite(), margin);
 		fdExecutionItems.right = new FormAttachment(100, -margin);
 		cExecutionItems.setLayoutData(fdExecutionItems);	
 
@@ -662,22 +687,6 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 		/********************************************************************************************************************/
 		/***************  cCommonItems - Common items Composite Group *******************************************************/
 		/********************************************************************************************************************/
-
-		wTmpStepname = new TextVarMenuItem(cCommonItems,(Control) null, "TeraDataBulkLoaderDialog.Stepname.Label", NO_VAR);
-		wStepname = new Text(cCommonItems, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
-		wStepname.setVisible(false);
-		wStepname.setText(stepname);
-		wConnection = addConnectionLine(cCommonItems, wStepname, middle*2, margin*2);
-		if (input.getDatabaseMeta()==null && transMeta.nrDatabases()==1) wConnection.select(0);
-		wConnection.addModifyListener(lsMod);
-		//  Generate or Use Script File
-		CompositeMenuItem wScriptOption = new CompositeMenuItem(cCommonItems, wConnection, "TeraDataBulkLoaderDialog.ScriptOption.Label", 0);
-		try {
-			Method callback = TeraDataBulkLoaderDialog.class.getMethod("disableInputs");
-			cScriptOption = wScriptOption.addRadioComposite(TeraDataBulkLoader.ScriptTypes, SWT.BORDER | SWT.NO_RADIO_GROUP, this, callback);
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		} 
 
 		
 		/********************************************************************************************************************/
@@ -723,12 +732,13 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 		/**************************** these in the fields tab *****************************************/
 		cGenScriptFieldsDisableMsg = new TextVarMenuItem(cGenScriptFields, (Control)null, "TeraDataBulkLoaderDialog.GenScriptFieldsDisable.Label",LABEL_ONLY | NO_BUTTON);
 		CompositeMenuItem wActionType = new CompositeMenuItem(cGenScriptFields, cGenScriptFieldsDisableMsg,"TeraDataBulkLoaderDialog.ActionType.Label", 0 );
-		try {
-			Method callback = TeraDataBulkLoaderDialog.class.getMethod("disableKeytable");
-			cActionType = wActionType.addRadioComposite(TeraDataBulkLoader.ActionTypes, SWT.BORDER | SWT.NO_RADIO_GROUP,this, callback);
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		} 
+		cActionType = wActionType.addRadioComposite(TeraDataBulkLoader.ActionTypes, SWT.NO_RADIO_GROUP,this, new Runnable() {
+      
+      @Override
+      public void run() {
+        disableKeytable();
+      }
+    });
 
 // Key table
 		int nrKeyCols = 3;
@@ -800,9 +810,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 		fdDoMapping.top   = new FormAttachment(wGetMapping, margin);
 		fdDoMapping.right = new FormAttachment(100, 0);
 		wDoMapping.setLayoutData(fdDoMapping);
-
 		wDoMapping.addListener(SWT.Selection, new Listener() { 	public void handleEvent(Event arg0) { generateMappings();}});
-
 
 		fdReturn = new FormData();
 		fdReturn.left   = new FormAttachment(0, 0);
@@ -835,8 +843,13 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 
 		setButtonPositions(new Button[] { wOK, wPreviewScript, wCancel }, margin, null);
 
-
-
+    FormData fdItemSet       = new FormData();
+    fdItemSet.left  = new FormAttachment(0, 0);
+    fdItemSet.top   = new FormAttachment(wScriptOption.getComposite(), margin);
+    fdItemSet.right = new FormAttachment(100, 0);
+    fdItemSet.bottom = new FormAttachment(wOK, -margin);
+    fItemSet.setLayoutData(fdItemSet);      
+    props.setLook(fItemSet);  
 		
 		// 
         // Search the fields in the background
@@ -1126,7 +1139,6 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 		Boolean bval;
 		
 		/************************** Common variables **************************************/
-		wTmpStepname.setText(wStepname.getText());
 		if ((val = input.getTbuildPath())     		!= null)		wTbuildPath.setText(val);
 		if ((val = input.getTbuildLibPath())     	!= null)		wTbuildLibPath.setText(val);
 		if ((val = input.getLibPath())     			!= null)		wLibPath.setText(val);
@@ -1315,7 +1327,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 		inf.setActionType(cActionType.getSelection());
 		inf.setDatabaseMeta(  transMeta.findDatabase(wConnection.getText()) );
 
-		stepname = wTmpStepname.getText(); // return value
+		stepname = wStepname.getText(); // return value
 	}
 
 	private class requiredFieldsError {
@@ -1349,6 +1361,12 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 				addMessage(BaseMessages.getString(PKG, msg));
 			}
 		}
+		
+		public void addIfUndef(Text text, String msg) {
+      if (Const.isEmpty(text.getText())){
+        addMessage(BaseMessages.getString(PKG, msg));
+      }
+    }
 
 		public void addIfUndef(CCombo text, String msg) {
 			if (Const.isEmpty(text.getText())){
@@ -1371,7 +1389,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 				);
 		
 		// Always required
-		errorPopup.addIfUndef(wTmpStepname,           "TeraDataBulkLoaderDialog.MissingStepname.DialogMessage");
+		errorPopup.addIfUndef(wStepname,           "TeraDataBulkLoaderDialog.MissingStepname.DialogMessage");
 		errorPopup.addIfUndef(wConnection,            "TeraDataBulkLoaderDialog.InvalidConnection.DialogMessage");  
 		errorPopup.addIfUndef(wTdInstall,             "TeraDataBulkLoaderDialog.MissingInstallPath.DialogMessage");
 
@@ -1409,6 +1427,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 		    cGenScriptControlItemsDisableMsg.setVisible(false);
 		    cGenScriptFieldsDisableMsg.setVisible(false);
 		    cUseScriptItemsDisableMsg.setVisible(true);
+
 		    // select appropriate tab
 		    fItemSet.setSelection(tiGenScriptControlItems);
 		}else{
