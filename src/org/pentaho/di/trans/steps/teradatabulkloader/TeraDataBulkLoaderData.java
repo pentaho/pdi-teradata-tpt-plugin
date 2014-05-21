@@ -41,32 +41,53 @@ import org.pentaho.di.trans.steps.teradatabulkloader.TeraDataBulkLoader.TbuildTh
  */
 
 public class TeraDataBulkLoaderData extends BaseStepData implements StepDataInterface {
+
+  /** The db. */
   public Database db;
 
-  public int[] keynrs; // nr of keylookup -value in row...
+  /** nr of keylookup -value in row... */
+  public int[] keynrs;
 
+  /** The error logger. */
   public StreamLogger errorLogger;
 
+  /** The output logger. */
   public StreamLogger outputLogger;
 
+  /** The quote. */
   public byte[] quote = "'".getBytes();
+
+  /** The separator. */
   public byte[] separator = ",".getBytes();
+
+  /** The newline. */
   public byte[] newline;
 
+  /** The bulk timestamp meta. */
   public ValueMetaInterface bulkTimestampMeta;
+
+  /** The bulk date meta. */
   public ValueMetaInterface bulkDateMeta;
+
+  /** The bulk number meta. */
   public ValueMetaInterface bulkNumberMeta;
 
+  /** The schema table. */
   public String schemaTable;
 
+  /** The fifo filename. */
   public String fifoFilename;
 
+  /** The fifo stream. */
   public DataOutputStream fifoStream;
 
+  /** The bulk format meta. */
   public ValueMetaInterface[] bulkFormatMeta;
 
+  /** The bulk size. */
   public long bulkSize;
 
+  /** The tbuild thread. */
   public TbuildThread tbuildThread;
 
   /**

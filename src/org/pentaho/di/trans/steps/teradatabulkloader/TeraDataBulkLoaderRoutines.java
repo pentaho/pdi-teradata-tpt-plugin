@@ -52,19 +52,45 @@ import org.pentaho.di.core.row.ValueMetaInterface;
 import org.pentaho.di.core.vfs.KettleVFS;
 import org.pentaho.di.i18n.BaseMessages;
 
+/**
+ * The Class TeraDataBulkLoaderRoutines.
+ */
 public class TeraDataBulkLoaderRoutines {
+
+  /** The pkg. */
   private static Class<?> PKG = TeraDataBulkLoaderMeta.class; // for i18n purposes, needed by Translator2!! $NON-NLS-1$
+
+  /** The parent. */
   private TeraDataBulkLoader parent;
+
+  /** The meta. */
   private TeraDataBulkLoaderMeta meta;
+
+  /** The script file. */
   private OutputStream scriptFile;
+
+  /** The script file print stream. */
   private PrintStream scriptFilePrintStream;
+
+  /** The Constant SIZEOF_INT. */
   static final int SIZEOF_INT = Integer.SIZE / Byte.SIZE;
 
+  /**
+   * Instantiates a new tera data bulk loader routines.
+   *
+   * @param parent the parent
+   * @param meta the meta
+   */
   public TeraDataBulkLoaderRoutines( TeraDataBulkLoader parent, TeraDataBulkLoaderMeta meta ) {
     this.parent = parent;
     this.meta = meta;
   }
 
+  /**
+   * Creates the insert command.
+   *
+   * @return the string
+   */
   private String createInsertCommand() {
     StringAppender cmd = new StringAppender();
     cmd.append( " INSERT INTO " + this.meta.getDbName() + '.' + this.meta.getTableName() + "\n" );
@@ -93,6 +119,11 @@ public class TeraDataBulkLoaderRoutines {
     return cmd.toString();
   }
 
+  /**
+   * Creates the upsert command.
+   *
+   * @return the string
+   */
   private String createUpsertCommand() {
     StringAppender updatecmd = new StringAppender();
     StringAppender insertcmd = new StringAppender();
@@ -130,6 +161,14 @@ public class TeraDataBulkLoaderRoutines {
     return quote( updatecmd.toString() ) + ",\n" + quote( insertcmd.toString() );
   }
 
+  /**
+   * Creates the step.
+   *
+   * @param label the label
+   * @param code the code
+   * @param operator the operator
+   * @return the string
+   */
   private String createStep( String label, String code, String operator ) {
     StringAppender cmd = new StringAppender( "STEP " + label + "(\n" + code + "\n" );
     if ( operator != null ) {
@@ -139,14 +178,33 @@ public class TeraDataBulkLoaderRoutines {
     return cmd.toString();
   }
 
+  /**
+   * To operator.
+   *
+   * @param operator the operator
+   * @return the string
+   */
   private String toOperator( String operator ) {
     return "TO OPERATOR ( " + operator + " )";
   }
 
+  /**
+   * Select operator.
+   *
+   * @param operator the operator
+   * @return the string
+   */
   private String selectOperator( String operator ) {
     return "SELECT * FROM OPERATOR ( " + operator + " )";
   }
 
+  /**
+   * To select operator.
+   *
+   * @param toOp the to op
+   * @param selOp the sel op
+   * @return the string
+   */
   private String toSelectOperator( String toOp, String selOp ) {
     StringAppender cmd = new StringAppender( toOperator( toOp ) + "\n" );
     if ( selOp != null ) {
@@ -156,26 +214,54 @@ public class TeraDataBulkLoaderRoutines {
     return cmd.toString();
   }
 
+  /**
+   * Quote.
+   *
+   * @param s the s
+   * @return the string
+   */
   private String quote( String s ) {
     return "'" + s + "'";
   }
 
+  /**
+   * Paren.
+   *
+   * @param s the s
+   * @return the string
+   */
   private String paren( String s ) {
     return "(" + s + ")";
   }
 
+  /**
+   * The Class ApplyClause.
+   */
   private class ApplyClause {
+
+    /** The field list. */
     private List<String> fieldList = new ArrayList<String>();
 
+    /**
+     * Instantiates a new apply clause.
+     */
     ApplyClause() {
     }
 
+    /**
+     * Adds the clause.
+     *
+     * @param c the c
+     */
     private void addClause( String c ) {
       if ( !Const.isEmpty( c ) ) {
         fieldList.add( c );
       }
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
     public String toString() {
       StringAppender cmd = new StringAppender( "APPLY \n" );
       for ( int i = 0; i < fieldList.size(); i++ ) {
@@ -189,15 +275,39 @@ public class TeraDataBulkLoaderRoutines {
     }
   }
 
+  /**
+   * The Class DefineSchema.
+   */
   private class DefineSchema {
+
+    /** The Constant TYPE_SCHEMA. */
     static final int TYPE_SCHEMA = 1;
+
+    /** The Constant TYPE_OPERATOR. */
     static final int TYPE_OPERATOR = 2;
+
+    /** The type. */
     private int type = 0;
+
+    /** The name. */
     private String name;
+
+    /** The field list. */
     private List<String> fieldList = new ArrayList<String>();
+
+    /** The type name. */
     private String typeName;
+
+    /** The schema name. */
     private String schemaName;
 
+    /**
+     * Instantiates a new define schema.
+     *
+     * @param operatorName the operator name
+     * @param typeName the type name
+     * @param schemaName the schema name
+     */
     DefineSchema( String operatorName, String typeName, String schemaName ) {
       this.name = operatorName;
       this.typeName = typeName;
@@ -206,11 +316,22 @@ public class TeraDataBulkLoaderRoutines {
 
     }
 
+    /**
+     * Instantiates a new define schema.
+     *
+     * @param tableName the table name
+     */
     DefineSchema( String tableName ) {
       this.name = tableName;
       this.type = TYPE_SCHEMA; /* table schema */
     }
 
+    /**
+     * Adds the field.
+     *
+     * @param name the name
+     * @param value the value
+     */
     private void addField( String name, String value ) {
       StringAppender item = new StringAppender( "VARCHAR " + name );
       if ( !( value == null || value.equals( "" ) ) ) {
@@ -219,6 +340,14 @@ public class TeraDataBulkLoaderRoutines {
       }
     }
 
+    /**
+     * Adds the field.
+     *
+     * @param name the name
+     * @param valueType the value type
+     * @param len the len
+     * @throws KettleException the kettle exception
+     */
     private void addField( String name, int valueType, int len ) throws KettleException {
       String type = null;
       switch ( valueType ) {
@@ -246,6 +375,9 @@ public class TeraDataBulkLoaderRoutines {
       fieldList.add( name + "     " + type );
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
     public String toString() {
       StringAppender cmd = new StringAppender();
       switch ( this.type ) {
@@ -272,6 +404,11 @@ public class TeraDataBulkLoaderRoutines {
   }
 
   // currently not used
+  /**
+   * Adds the missing options.
+   *
+   * @return the string
+   */
   private String addMissingOptions() {
     StringAppender cmd = new StringAppender();
     if ( this.meta.getIgnoreDupUpdate() ) {
@@ -286,14 +423,35 @@ public class TeraDataBulkLoaderRoutines {
     return cmd.toString();
   }
 
+  /**
+   * Teradata job.
+   *
+   * @param jobName the job name
+   * @param description the description
+   * @param code the code
+   * @return the string
+   */
   private String teradataJob( String jobName, String description, String code ) {
     return "DEFINE JOB " + jobName + "\nDESCRIPTION '" + description + "'\n(\n" + code + ");";
   }
 
+  /**
+   * Drop table.
+   *
+   * @param user the user
+   * @param suffix the suffix
+   * @return the string
+   */
   public String dropTable( String user, String suffix ) {
     return "DROP TABLE " + ( Const.isEmpty( user ) ? this.meta.getTableName() + "_" + suffix : user );
   }
 
+  /**
+   * Creates the script file.
+   *
+   * @return the string
+   * @throws Exception the exception
+   */
   public String createScriptFile() throws Exception {
     File tempScriptFile;
 
@@ -321,6 +479,11 @@ public class TeraDataBulkLoaderRoutines {
     return tempScriptFile.getAbsolutePath();
   }
 
+  /**
+   * Creates the from existing script file.
+   *
+   * @throws Exception the exception
+   */
   public void createFromExistingScriptFile() throws Exception {
     FileInputStream originalScript = new FileInputStream( this.meta.getExistingScriptFile() );
     DataInputStream in = new DataInputStream( originalScript );
@@ -337,6 +500,12 @@ public class TeraDataBulkLoaderRoutines {
     in.close();
   }
 
+  /**
+   * Creates the generated script file.
+   *
+   * @return the string
+   * @throws Exception the exception
+   */
   public String createGeneratedScriptFile() throws Exception {
     // this is the method called when generating the actual script
     // to execute. we will construct the maps for types and length
@@ -355,6 +524,14 @@ public class TeraDataBulkLoaderRoutines {
     return createGeneratedScriptFile( inputFieldTypes, inputFieldLength );
   }
 
+  /**
+   * Creates the generated script file.
+   *
+   * @param inputFieldTypes the input field types
+   * @param inputFieldLength the input field length
+   * @return the string
+   * @throws Exception the exception
+   */
   public String createGeneratedScriptFile( Map<String, Integer> inputFieldTypes, Map<String, Integer> inputFieldLength )
     throws Exception {
     // Schema info
@@ -461,11 +638,11 @@ public class TeraDataBulkLoaderRoutines {
   }
 
   /**
-   * @param fileName
-   *          the filename to resolve. may contain Kettle Environment variables.
+   * Resolve file name.
+   *
+   * @param fileName          the filename to resolve. may contain Kettle Environment variables.
    * @return the data file name.
-   * @throws IOException
-   *           ...
+   * @throws KettleException the kettle exception
    */
   @SuppressWarnings( "unused" )
   private String resolveFileName( final String fileName ) throws KettleException {
@@ -473,9 +650,16 @@ public class TeraDataBulkLoaderRoutines {
     return KettleVFS.getFilename( fileObject );
   }
 
-  /*****************************************
+  /**
+   * ***************************************
    * formatting routines for "unformatted" output
-   ******************************************/
+   * ****************************************.
+   *
+   * @param valueMeta the value meta
+   * @param valueData the value data
+   * @return the byte[]
+   * @throws KettleValueException the kettle value exception
+   */
 
   static byte[] convertChar( ValueMetaInterface valueMeta, Object valueData ) throws KettleValueException {
     String string = valueMeta.getString( valueData );
@@ -485,6 +669,12 @@ public class TeraDataBulkLoaderRoutines {
     return null;
   }
 
+  /**
+   * Convert varchar.
+   *
+   * @param string the string
+   * @return the byte[]
+   */
   static byte[] convertVarchar( String string ) {
     ByteBuffer b = ByteBuffer.allocate( 4 ).order( ByteOrder.LITTLE_ENDIAN );
     short strlen = 0;
@@ -503,18 +693,36 @@ public class TeraDataBulkLoaderRoutines {
     return result;
   }
 
+  /**
+   * Convert long.
+   *
+   * @param integer the integer
+   * @return the byte[]
+   */
   static byte[] convertLong( Long integer ) {
     ByteBuffer b = ByteBuffer.allocate( 8 ).order( ByteOrder.LITTLE_ENDIAN );
     b.putLong( integer != null ? integer : 0 );
     return b.array();
   }
 
+  /**
+   * Convert float.
+   *
+   * @param d the d
+   * @return the byte[]
+   */
   static byte[] convertFloat( Double d ) {
     ByteBuffer b = ByteBuffer.allocate( 8 ).order( ByteOrder.LITTLE_ENDIAN );
     b.putDouble( d != null ? d : 0 );
     return b.array();
   }
 
+  /**
+   * Convert bignum.
+   *
+   * @param d the d
+   * @return the byte[]
+   */
   static byte[] convertBignum( BigDecimal d ) {
     if ( d != null ) {
       return convertFloat( d.doubleValue() );
@@ -523,6 +731,12 @@ public class TeraDataBulkLoaderRoutines {
     }
   }
 
+  /**
+   * Convert date time.
+   *
+   * @param ts the ts
+   * @return the byte[]
+   */
   static byte[] convertDateTime( Date ts ) {
     if ( ts != null ) {
       SimpleDateFormat fmt = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss.SSSSSS" );
@@ -534,6 +748,12 @@ public class TeraDataBulkLoaderRoutines {
     return result;
   }
 
+  /**
+   * Convert boolean.
+   *
+   * @param val the val
+   * @return the byte[]
+   */
   static byte[] convertBoolean( Boolean val ) {
     byte[] b = new byte[1];
     if ( val != null && val ) {

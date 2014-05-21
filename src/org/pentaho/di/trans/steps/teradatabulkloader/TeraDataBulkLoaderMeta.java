@@ -71,15 +71,29 @@ import org.pentaho.di.core.annotations.Step;
     documentationUrl = "http://wiki.pentaho.com/display/EAI/Teradata+TPT+Insert+Upsert+Bulk+Loader" )
 public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInterface,
     ProvidesDatabaseConnectionInformation {
+
+  /** The pkg. */
   private static Class<?> PKG = TeraDataBulkLoaderMeta.class; // for i18n purposes, needed by Translator2!! $NON-NLS-1$
 
+  /** The Constant FIELD_FORMAT_TYPE_OK. */
   public static final int FIELD_FORMAT_TYPE_OK = 0;
+
+  /** The Constant FIELD_FORMAT_TYPE_DATE. */
   public static final int FIELD_FORMAT_TYPE_DATE = 1;
+
+  /** The Constant FIELD_FORMAT_TYPE_TIMESTAMP. */
   public static final int FIELD_FORMAT_TYPE_TIMESTAMP = 2;
+
+  /** The Constant FIELD_FORMAT_TYPE_NUMBER. */
   public static final int FIELD_FORMAT_TYPE_NUMBER = 3;
+
+  /** The Constant FIELD_FORMAT_TYPE_STRING_ESCAPE. */
   public static final int FIELD_FORMAT_TYPE_STRING_ESCAPE = 4;
 
+  /** The Constant fieldFormatTypeCodes. */
   private static final String[] fieldFormatTypeCodes = { "OK", "DATE", "TIMESTAMP", "NUMBER", "STRING_ESC" };
+
+  /** The Constant fieldFormatTypeDescriptions. */
   private static final String[] fieldFormatTypeDescriptions = {
     BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.FieldFormatType.OK.Description" ),
     BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.FieldFormatType.Date.Description" ),
@@ -87,384 +101,874 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.FieldFormatType.Number.Description" ),
     BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.FieldFormatType.StringEscape.Description" ), };
 
+  /** The my step. */
   private TeraDataBulkLoader myStep;
   /* Dialog populated variables - common */
+  /** The database meta. */
   private DatabaseMeta databaseMeta;
+
+  /** The tbuild path. */
   private String tbuildPath = null;
+
+  /** The job name. */
   private String jobName = null;
+
+  /** The generate script. */
   private Boolean generateScript = null;
+
+  /** The tbuild lib path. */
   private String tbuildLibPath = null;
+
+  /** The lib path. */
   private String libPath = null;
+
+  /** The cop lib path. */
   private String copLibPath = null;
+
+  /** The tdicu lib path. */
   private String tdicuLibPath = null;
+
+  /** The install path. */
   private String installPath = BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.TbuildClientRoot" );
+
+  /** The twb root. */
   private String twbRoot = null;
   /* Dialog populated variables - use script */
+  /** The existing script file. */
   private String existingScriptFile = null;
+
+  /** The existing variable file. */
   private String existingVariableFile = null;
+
+  /** The substitute script file. */
   private Boolean substituteScriptFile = null;
+
+  /** The substitute variable file. */
   private Boolean substituteVariableFile = null;
 
   /* Dialog populated variables - generate script */
+  /** The fifo file name. */
   private String fifoFileName = null;
+
+  /** The script file name. */
   private String scriptFileName = null;
+
+  /** The schema name. */
   private String schemaName = null;
+
+  /** The table name. */
   private String tableName = null;
+
+  /** The log table. */
   private String logTable = null;
+
+  /** The work table. */
   private String workTable = null;
+
+  /** The error table. */
   private String errorTable = null;
+
+  /** The error table2. */
   private String errorTable2 = null;
+
+  /** The drop log table. */
   private Boolean dropLogTable = false;
+
+  /** The drop work table. */
   private Boolean dropWorkTable = false;
+
+  /** The drop error table. */
   private Boolean dropErrorTable = false;
+
+  /** The drop error table2. */
   private Boolean dropErrorTable2 = false;
+
+  /** The ignore dup update. */
   private Boolean ignoreDupUpdate = false;
+
+  /** The insert missing update. */
   private Boolean insertMissingUpdate = false;
+
+  /** The ignore missing update. */
   private Boolean ignoreMissingUpdate = false;
+
+  /** The access log file. */
   private String accessLogFile = null;
+
+  /** The update log file. */
   private String updateLogFile = null;
+
+  /** The action type. */
   private int actionType = 0; // Insert, Upsert - index into TeraDataBulkLoader.ActionTypes[]
 
-  /** Field name of the target table */
+  /**  Field name of the target table. */
   private String[] fieldTable = null;
 
-  /** Field name in the stream */
+  /**  Field name in the stream. */
   private String[] fieldStream = null;
+
+  /** The field update. */
   private Boolean[] fieldUpdate = null;
-  /** which field in input stream to compare with? */
+
+  /**  which field in input stream to compare with?. */
   private String[] keyStream = null;
 
-  /** field in table */
+  /**  field in table. */
   private String[] keyLookup = null;
 
   /** Comparator: =, <>, BETWEEN, ... */
   private String[] keyCondition = null;
 
+  /**
+   * Instantiates a new tera data bulk loader meta.
+   */
   public TeraDataBulkLoaderMeta() {
     super();
   }
 
   /**
+   * Gets the database meta.
+   *
    * @return Returns the database.
    */
   public DatabaseMeta getDatabaseMeta() {
     return databaseMeta;
   }
 
+  /**
+   * Gets the step.
+   *
+   * @return the step
+   */
   public TeraDataBulkLoader getStep() {
     return this.myStep;
   }
 
+  /**
+   * Sets the generate script.
+   *
+   * @param val the val
+   * @return the boolean
+   */
   public Boolean setGenerateScript( Boolean val ) {
     return this.generateScript = val;
   }
 
+  /**
+   * Gets the generate script.
+   *
+   * @return the generate script
+   */
   public Boolean getGenerateScript() {
     return this.generateScript;
   }
 
+  /**
+   * Sets the substitute control file.
+   *
+   * @param val the val
+   * @return the boolean
+   */
   public Boolean setSubstituteControlFile( Boolean val ) {
     return this.substituteScriptFile = val;
   }
 
+  /**
+   * Gets the substitute control file.
+   *
+   * @return the substitute control file
+   */
   public Boolean getSubstituteControlFile() {
     return this.substituteScriptFile;
   }
 
+  /**
+   * Sets the existing script file.
+   *
+   * @param val the val
+   * @return the string
+   */
   public String setExistingScriptFile( String val ) {
     return this.existingScriptFile = val;
   }
 
+  /**
+   * Gets the existing script file.
+   *
+   * @return the existing script file
+   */
   public String getExistingScriptFile() {
     return this.existingScriptFile;
   }
 
+  /**
+   * Sets the job name.
+   *
+   * @param val the val
+   * @return the string
+   */
   public String setJobName( String val ) {
     return this.jobName = val;
   }
 
+  /**
+   * Gets the job name.
+   *
+   * @return the job name
+   */
   public String getJobName() {
     return this.jobName;
   }
 
+  /**
+   * Gets the variable file.
+   *
+   * @return the variable file
+   */
   public String getVariableFile() {
     return this.existingVariableFile;
   }
 
+  /**
+   * Sets the variable file.
+   *
+   * @param val the val
+   * @return the string
+   */
   public String setVariableFile( String val ) {
     return this.existingVariableFile = val;
   }
 
+  /**
+   * Gets the drop log table.
+   *
+   * @return the drop log table
+   */
   public Boolean getDropLogTable() {
     return this.dropLogTable;
   }
 
+  /**
+   * Sets the drop log table.
+   *
+   * @param val the val
+   * @return the boolean
+   */
   public Boolean setDropLogTable( Boolean val ) {
     return this.dropLogTable = val;
   }
 
+  /**
+   * Gets the drop work table.
+   *
+   * @return the drop work table
+   */
   public Boolean getDropWorkTable() {
     return this.dropWorkTable;
   }
 
+  /**
+   * Sets the drop work table.
+   *
+   * @param val the val
+   * @return the boolean
+   */
   public Boolean setDropWorkTable( Boolean val ) {
     return this.dropWorkTable = val;
   }
 
+  /**
+   * Gets the drop error table.
+   *
+   * @return the drop error table
+   */
   public Boolean getDropErrorTable() {
     return this.dropErrorTable;
   }
 
+  /**
+   * Sets the drop error table.
+   *
+   * @param val the val
+   * @return the boolean
+   */
   public Boolean setDropErrorTable( Boolean val ) {
     return this.dropErrorTable = val;
   }
 
+  /**
+   * Gets the drop error table2.
+   *
+   * @return the drop error table2
+   */
   public Boolean getDropErrorTable2() {
     return this.dropErrorTable2;
   }
 
+  /**
+   * Sets the drop error table2.
+   *
+   * @param val the val
+   * @return the boolean
+   */
   public Boolean setDropErrorTable2( Boolean val ) {
     return this.dropErrorTable2 = val;
   }
 
+  /**
+   * Gets the ignore dup update.
+   *
+   * @return the ignore dup update
+   */
   public Boolean getIgnoreDupUpdate() {
     return this.ignoreDupUpdate;
   }
 
+  /**
+   * Sets the ignore dup update.
+   *
+   * @param val the val
+   * @return the boolean
+   */
   public Boolean setIgnoreDupUpdate( Boolean val ) {
     return this.ignoreDupUpdate = val;
   }
 
+  /**
+   * Gets the insert missing update.
+   *
+   * @return the insert missing update
+   */
   public Boolean getInsertMissingUpdate() {
     return this.insertMissingUpdate;
   }
 
+  /**
+   * Sets the insert missing update.
+   *
+   * @param val the val
+   * @return the boolean
+   */
   public Boolean setInsertMissingUpdate( Boolean val ) {
     return this.insertMissingUpdate = val;
   }
 
+  /**
+   * Gets the ignore missing update.
+   *
+   * @return the ignore missing update
+   */
   public Boolean getIgnoreMissingUpdate() {
     return this.ignoreMissingUpdate;
   }
 
+  /**
+   * Sets the ignore missing update.
+   *
+   * @param val the val
+   * @return the boolean
+   */
   public Boolean setIgnoreMissingUpdate( Boolean val ) {
     return this.ignoreMissingUpdate = val;
   }
 
+  /**
+   * Gets the substitute variable file.
+   *
+   * @return the substitute variable file
+   */
   public Boolean getSubstituteVariableFile() {
     return this.substituteVariableFile;
   }
 
+  /**
+   * Sets the substitute variable file.
+   *
+   * @param val the val
+   * @return the boolean
+   */
   public Boolean setSubstituteVariableFile( Boolean val ) {
     return this.substituteVariableFile = val;
   }
 
+  /**
+   * Sets the tbuild path.
+   *
+   * @param val the val
+   * @return the string
+   */
   public String setTbuildPath( String val ) {
     return this.tbuildPath = val;
   }
 
+  /**
+   * Gets the td install path.
+   *
+   * @return the td install path
+   */
   public String getTdInstallPath() {
     return this.installPath;
   }
 
+  /**
+   * Gets the tbuild path.
+   *
+   * @return the tbuild path
+   */
   public String getTbuildPath() {
     return Const.isEmpty( this.tbuildPath ) ? getTwbRoot() + "/bin/tbuild" : this.tbuildPath;
   }
 
+  /**
+   * Gets the tbuild lib path.
+   *
+   * @return the tbuild lib path
+   */
   public String getTbuildLibPath() {
     return Const.isEmpty( this.tbuildLibPath ) ? getTwbRoot() + "/lib" : this.tbuildLibPath;
   }
 
+  /**
+   * Gets the lib path.
+   *
+   * @return the lib path
+   */
   public String getLibPath() {
     return Const.isEmpty( this.libPath ) ? installPath + "/lib" : this.libPath;
   }
 
+  /**
+   * Gets the cop lib path.
+   *
+   * @return the cop lib path
+   */
   public String getCopLibPath() {
     return Const.isEmpty( this.copLibPath ) ? installPath + "/lib" : this.copLibPath;
   }
 
+  /**
+   * Gets the tdicu lib path.
+   *
+   * @return the tdicu lib path
+   */
   public String getTdicuLibPath() {
     return Const.isEmpty( this.tdicuLibPath ) ? installPath + "/tdicu/lib" : this.tdicuLibPath;
   }
 
+  /**
+   * Gets the twb root.
+   *
+   * @return the twb root
+   */
   public String getTwbRoot() {
     return Const.isEmpty( this.twbRoot ) ? installPath + "/tbuild" : this.twbRoot;
   }
 
+  /**
+   * Sets the tbuild lib path.
+   *
+   * @param s the s
+   * @return the string
+   */
   public String setTbuildLibPath( String s ) {
     return this.tbuildLibPath = s;
   }
 
+  /**
+   * Sets the lib path.
+   *
+   * @param s the s
+   * @return the string
+   */
   public String setLibPath( String s ) {
     return this.libPath = s;
   }
 
+  /**
+   * Sets the cop lib path.
+   *
+   * @param s the s
+   * @return the string
+   */
   public String setCopLibPath( String s ) {
     return this.copLibPath = s;
   }
 
+  /**
+   * Sets the tdicu lib path.
+   *
+   * @param s the s
+   * @return the string
+   */
   public String setTdicuLibPath( String s ) {
     return this.tdicuLibPath = s;
   }
 
+  /**
+   * Sets the td install path.
+   *
+   * @param s the s
+   * @return the string
+   */
   public String setTdInstallPath( String s ) {
     return this.installPath = s;
   }
 
+  /**
+   * Sets the twb root.
+   *
+   * @param s the s
+   * @return the string
+   */
   public String setTwbRoot( String s ) {
     return twbRoot = s;
   }
 
+  /**
+   * Sets the fifo file name.
+   *
+   * @param val the val
+   * @return the string
+   */
   public String setFifoFileName( String val ) {
     return this.fifoFileName = val;
   }
 
+  /**
+   * Gets the fifo file name.
+   *
+   * @return the fifo file name
+   */
   public String getFifoFileName() {
     return this.fifoFileName;
   }
 
+  /**
+   * Sets the script file name.
+   *
+   * @param val the val
+   * @return the string
+   */
   public String setScriptFileName( String val ) {
     return this.scriptFileName = val;
   }
 
+  /**
+   * Gets the script file name.
+   *
+   * @return the script file name
+   */
   public String getScriptFileName() {
     return this.scriptFileName;
   }
 
+  /**
+   * Gets the db name.
+   *
+   * @return the db name
+   */
   public String getDbName() {
     return this.databaseMeta.getDatabaseInterface().getDatabaseName();
   }
 
+  /* (non-Javadoc)
+   * @see org.pentaho.di.core.ProvidesDatabaseConnectionInformation#getSchemaName()
+   */
   public String getSchemaName() {
     return this.schemaName;
   }
 
+  /**
+   * Sets the schema name.
+   *
+   * @param val the val
+   * @return the string
+   */
   public String setSchemaName( String val ) {
     return this.schemaName = val;
   }
 
+  /**
+   * Gets the log table.
+   *
+   * @return the log table
+   */
   public String getLogTable() {
     return this.logTable;
   }
 
+  /**
+   * Sets the log table.
+   *
+   * @param val the val
+   * @return the string
+   */
   public String setLogTable( String val ) {
     return this.logTable = val;
   }
 
+  /**
+   * Gets the work table.
+   *
+   * @return the work table
+   */
   public String getWorkTable() {
     return this.workTable;
   }
 
+  /**
+   * Sets the work table.
+   *
+   * @param val the val
+   * @return the string
+   */
   public String setWorkTable( String val ) {
     return this.workTable = val;
   }
 
+  /**
+   * Gets the error table.
+   *
+   * @return the error table
+   */
   public String getErrorTable() {
     return this.errorTable;
   }
 
+  /**
+   * Sets the error table.
+   *
+   * @param val the val
+   * @return the string
+   */
   public String setErrorTable( String val ) {
     return this.errorTable = val;
   }
 
+  /**
+   * Gets the error table2.
+   *
+   * @return the error table2
+   */
   public String getErrorTable2() {
     return this.errorTable2;
   }
 
+  /**
+   * Sets the error table2.
+   *
+   * @param val the val
+   * @return the string
+   */
   public String setErrorTable2( String val ) {
     return this.errorTable2 = val;
   }
 
+  /**
+   * Gets the access log file.
+   *
+   * @return the access log file
+   */
   public String getAccessLogFile() {
     return this.accessLogFile;
   }
 
+  /**
+   * Sets the access log file.
+   *
+   * @param val the val
+   * @return the string
+   */
   public String setAccessLogFile( String val ) {
     return this.accessLogFile = val;
   }
 
+  /**
+   * Gets the update log file.
+   *
+   * @return the update log file
+   */
   public String getUpdateLogFile() {
     return this.updateLogFile;
   }
 
+  /**
+   * Sets the update log file.
+   *
+   * @param val the val
+   * @return the string
+   */
   public String setUpdateLogFile( String val ) {
     return this.updateLogFile = val;
   }
 
+  /**
+   * Gets the action type.
+   *
+   * @return the action type
+   */
   public int getActionType() {
     return this.actionType;
   }
 
+  /**
+   * Sets the action type.
+   *
+   * @param val the val
+   * @return the int
+   */
   public int setActionType( int val ) {
     return this.actionType = val;
   }
 
+  /**
+   * Sets the database meta.
+   *
+   * @param database the new database meta
+   */
   public void setDatabaseMeta( DatabaseMeta database ) {
     this.databaseMeta = database;
   }
 
+  /* (non-Javadoc)
+   * @see org.pentaho.di.core.ProvidesDatabaseConnectionInformation#getTableName()
+   */
   public String getTableName() {
     return tableName;
   }
 
+  /**
+   * Sets the table name.
+   *
+   * @param tableName the new table name
+   */
   public void setTableName( String tableName ) {
     this.tableName = tableName;
   }
 
+  /**
+   * Gets the field table.
+   *
+   * @return the field table
+   */
   public String[] getFieldTable() {
     return fieldTable;
   }
 
+  /**
+   * Sets the field table.
+   *
+   * @param fieldTable the new field table
+   */
   public void setFieldTable( String[] fieldTable ) {
     this.fieldTable = fieldTable;
   }
 
+  /**
+   * Gets the field stream.
+   *
+   * @return the field stream
+   */
   public String[] getFieldStream() {
     return fieldStream;
   }
 
+  /**
+   * Sets the field stream.
+   *
+   * @param fieldStream the new field stream
+   */
   public void setFieldStream( String[] fieldStream ) {
     this.fieldStream = fieldStream;
   }
 
+  /**
+   * Gets the field update.
+   *
+   * @return the field update
+   */
   public Boolean[] getFieldUpdate() {
     return fieldUpdate;
   }
 
+  /**
+   * Sets the field update.
+   *
+   * @param fieldUpdate the new field update
+   */
   public void setFieldUpdate( Boolean[] fieldUpdate ) {
     this.fieldUpdate = fieldUpdate;
   }
 
+  /**
+   * Gets the key stream.
+   *
+   * @return the key stream
+   */
   public String[] getKeyStream() {
     return keyStream;
   }
 
+  /**
+   * Sets the key stream.
+   *
+   * @param fieldStream the new key stream
+   */
   public void setKeyStream( String[] fieldStream ) {
     this.keyStream = fieldStream;
   }
 
+  /**
+   * Gets the key lookup.
+   *
+   * @return the key lookup
+   */
   public String[] getKeyLookup() {
     return keyLookup;
   }
 
+  /**
+   * Sets the key lookup.
+   *
+   * @param fieldStream the new key lookup
+   */
   public void setKeyLookup( String[] fieldStream ) {
     this.keyLookup = fieldStream;
   }
 
+  /**
+   * Gets the key condition.
+   *
+   * @return the key condition
+   */
   public String[] getKeyCondition() {
     return keyCondition;
   }
 
+  /**
+   * Sets the key condition.
+   *
+   * @param fieldStream the new key condition
+   */
   public void setKeyCondition( String[] fieldStream ) {
     this.keyCondition = fieldStream;
   }
 
+  /* (non-Javadoc)
+   * @see org.pentaho.di.trans.step.BaseStepMeta#loadXML(org.w3c.dom.Node, java.util.List, java.util.Map)
+   */
   @Override
   public void loadXML( Node stepnode, List<DatabaseMeta> databases, Map<String, Counter> arg2 )
     throws KettleXMLException {
     readData( stepnode, databases );
   }
 
+  /**
+   * Allocate.
+   *
+   * @param nrkeys the nrkeys
+   * @param nrvalues the nrvalues
+   */
   public void allocate( int nrkeys, int nrvalues ) {
     keyStream = new String[nrkeys];
     keyLookup = new String[nrkeys];
@@ -474,6 +978,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     fieldUpdate = new Boolean[nrvalues];
   }
 
+  /* (non-Javadoc)
+   * @see org.pentaho.di.trans.step.BaseStepMeta#clone()
+   */
   public Object clone() {
     TeraDataBulkLoaderMeta retval = (TeraDataBulkLoaderMeta) super.clone();
     int nrvalues = fieldTable.length;
@@ -495,6 +1002,13 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     return retval;
   }
 
+  /**
+   * Read data.
+   *
+   * @param stepnode the stepnode
+   * @param databases the databases
+   * @throws KettleXMLException the kettle xml exception
+   */
   private void readData( Node stepnode, List<? extends SharedObjectInterface> databases ) throws KettleXMLException {
     try {
       // common options
@@ -583,12 +1097,18 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     }
   }
 
+  /* (non-Javadoc)
+   * @see org.pentaho.di.trans.step.StepMetaInterface#setDefault()
+   */
   public void setDefault() {
     fieldTable = null;
     databaseMeta = null;
     allocate( 0, 0 );
   }
 
+  /* (non-Javadoc)
+   * @see org.pentaho.di.trans.step.BaseStepMeta#getXML()
+   */
   public String getXML() {
     StringBuffer retval = new StringBuffer( 3000 );
 
@@ -658,6 +1178,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     return retval.toString();
   }
 
+  /**
+   * Read step metadata from repository
+   */
   @Override
   public void readRep( Repository rep, ObjectId id_step, List<DatabaseMeta> databases, Map<String, Counter> arg3 )
     throws KettleException {
@@ -726,6 +1249,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     }
   }
 
+  /**
+   * Save step metadata to repository
+   */
   @Override
   public void saveRep( Repository rep, ObjectId id_transformation, ObjectId id_step ) throws KettleException {
 
@@ -790,6 +1316,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     }
   }
 
+  /**
+   * Check the values stored in this metadata
+   */
   @Override
   public void check( List<CheckResultInterface> remarks, TransMeta transMeta, StepMeta stepMeta, RowMetaInterface prev,
       String[] input, String[] output, RowMetaInterface arg6 ) {
@@ -925,6 +1454,16 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     }
   }
 
+  /**
+   * Gets the SQL statements.
+   *
+   * @param transMeta the trans meta
+   * @param stepMeta the step meta
+   * @param prev the prev
+   * @param repository the repository
+   * @return the SQL statements
+   * @throws KettleStepException the kettle step exception
+   */
   public SQLStatement getSQLStatements( TransMeta transMeta, StepMeta stepMeta, RowMetaInterface prev,
       Repository repository ) throws KettleStepException {
     SQLStatement retval = new SQLStatement( stepMeta.getName(), databaseMeta, null ); // default: nothing to do!
@@ -980,27 +1519,25 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     return retval;
   }
 
-  /*
-   * public void analyseImpact(List<DatabaseImpact> impact, TransMeta transMeta, StepMeta stepMeta, RowMetaInterface
-   * prev, String input[], String output[], RowMetaInterface info, Repository repository, IMetaStore metaStore) throws
-   * KettleStepException { if (prev != null) { // Insert dateMask fields : read/write for (int i = 0; i <
-   * fieldTable.length; i++) { ValueMetaInterface v = prev.searchValueMeta(fieldStream[i]);
-   * 
-   * DatabaseImpact ii = new DatabaseImpact(DatabaseImpact.TYPE_IMPACT_READ_WRITE, transMeta.getName(),
-   * stepMeta.getName(), databaseMeta .getDatabaseName(), transMeta.environmentSubstitute(tableName), fieldTable[i],
-   * fieldStream[i], v!=null?v.getOrigin():"?", "", "Type = " + v.toStringMeta()); //$NON-NLS-3$ impact.add(ii); } } }
+  /**
+   * Get the StepInterface associated with this step metadata
    */
-
   public StepInterface getStep( StepMeta stepMeta, StepDataInterface stepDataInterface, int cnr, TransMeta transMeta,
       Trans trans ) {
     myStep = new TeraDataBulkLoader( stepMeta, stepDataInterface, cnr, transMeta, trans );
     return myStep;
   }
 
+  /* (non-Javadoc)
+   * @see org.pentaho.di.trans.step.StepMetaInterface#getStepData()
+   */
   public StepDataInterface getStepData() {
     return new TeraDataBulkLoaderData();
   }
 
+  /* (non-Javadoc)
+   * @see org.pentaho.di.trans.step.BaseStepMeta#getUsedDatabaseConnections()
+   */
   public DatabaseMeta[] getUsedDatabaseConnections() {
     if ( databaseMeta != null ) {
       return new DatabaseMeta[] { databaseMeta };
@@ -1009,6 +1546,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     }
   }
 
+  /* (non-Javadoc)
+   * @see org.pentaho.di.trans.step.BaseStepMeta#getRequiredFields(org.pentaho.di.core.variables.VariableSpace)
+   */
   public RowMetaInterface getRequiredFields( VariableSpace space ) throws KettleException {
     String realTableName = space.environmentSubstitute( tableName );
     String realSchemaName = space.environmentSubstitute( schemaName );
@@ -1046,6 +1586,8 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   }
 
   /**
+   * Gets the field format type codes.
+   *
    * @return the schemaName
    */
 
@@ -1053,18 +1595,41 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     return fieldFormatTypeCodes;
   }
 
+  /**
+   * Gets the field format type descriptions.
+   *
+   * @return the field format type descriptions
+   */
   public static String[] getFieldFormatTypeDescriptions() {
     return fieldFormatTypeDescriptions;
   }
 
+  /**
+   * Gets the field format type code.
+   *
+   * @param type the type
+   * @return the field format type code
+   */
   public static String getFieldFormatTypeCode( int type ) {
     return fieldFormatTypeCodes[type];
   }
 
+  /**
+   * Gets the field format type description.
+   *
+   * @param type the type
+   * @return the field format type description
+   */
   public static String getFieldFormatTypeDescription( int type ) {
     return fieldFormatTypeDescriptions[type];
   }
 
+  /**
+   * Gets the field format type.
+   *
+   * @param codeOrDescription the code or description
+   * @return the field format type
+   */
   public static int getFieldFormatType( String codeOrDescription ) {
     for ( int i = 0; i < fieldFormatTypeCodes.length; i++ ) {
       if ( fieldFormatTypeCodes[i].equalsIgnoreCase( codeOrDescription ) ) {
@@ -1079,9 +1644,11 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     return FIELD_FORMAT_TYPE_OK;
   }
 
+  /* (non-Javadoc)
+   * @see org.pentaho.di.core.ProvidesDatabaseConnectionInformation#getMissingDatabaseConnectionInformationMessage()
+   */
   @Override
   public String getMissingDatabaseConnectionInformationMessage() {
-    // TODO Auto-generated method stub
     return null;
   }
 
