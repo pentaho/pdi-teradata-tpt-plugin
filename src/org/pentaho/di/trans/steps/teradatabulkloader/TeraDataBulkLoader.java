@@ -66,27 +66,56 @@ import org.pentaho.di.core.vfs.KettleVFS;
  */
 
 public class TeraDataBulkLoader extends BaseStep implements StepInterface {
+
+  /** The pkg. */
   private static Class<?> PKG = TeraDataBulkLoaderMeta.class; // for i18n purposes, needed by Translator2!! $NON-NLS-1$
 
+  /** The Action types. */
   public static String[] ActionTypes = { BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Insert.Label" ),
     BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Upsert.Label" ), };
+
+  /** The Script types. */
   public static String[] ScriptTypes = {
     BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ScriptOptionGenerate.Label" ),
     BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ScriptOptionUseExisting.Label" ) };
 
+  /** The Constant DEFAULT_ERROR_CODE. */
   public static final long DEFAULT_ERROR_CODE = 1L;
 
+  /** The meta. */
   private TeraDataBulkLoaderMeta meta;
+
+  /** The data. */
   TeraDataBulkLoaderData data;
+
+  /** The thread wait time. */
   private final long threadWaitTime = 300000;
+
+  /** The thread wait time text. */
   private final String threadWaitTimeText = "5min";
+
+  /** The temp script file. */
   private String tempScriptFile;
 
+  /**
+   * Instantiates a new tera data bulk loader.
+   *
+   * @param stepMeta the step meta
+   * @param stepDataInterface the step data interface
+   * @param copyNr the copy nr
+   * @param transMeta the trans meta
+   * @param trans the trans
+   */
   public TeraDataBulkLoader( StepMeta stepMeta, StepDataInterface stepDataInterface, int copyNr, TransMeta transMeta,
       Trans trans ) {
     super( stepMeta, stepDataInterface, copyNr, transMeta, trans );
   }
 
+  /**
+   * Execute load command.
+   *
+   * @throws Exception the exception
+   */
   private void executeLoadCommand() throws Exception {
 
     TeraDataBulkLoaderRoutines routines = new TeraDataBulkLoaderRoutines( this, this.meta );
@@ -131,6 +160,13 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
 
   }
 
+  /**
+   * Execute.
+   *
+   * @param meta the meta
+   * @return true, if successful
+   * @throws KettleException the kettle exception
+   */
   public boolean execute( TeraDataBulkLoaderMeta meta ) throws KettleException {
     Runtime rt = Runtime.getRuntime();
 
@@ -213,6 +249,11 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     return builder.toString();
   }
 
+  /**
+   * Creates the environment variables.
+   *
+   * @return the string[]
+   */
   public String[] createEnvironmentVariables() {
     List<String> varlist = new ArrayList<String>();
     StringAppender libpath = new StringAppender();
@@ -230,14 +271,35 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     return (String[]) varlist.toArray( new String[varlist.size()] );
   }
 
+  /**
+   * The Class TbuildThread.
+   */
   static class TbuildThread extends Thread {
+
+    /** The parent. */
     private TeraDataBulkLoader parent;
+
+    /** The command. */
     private String command;
+
+    /** The environment. */
     private String[] environment;
+
+    /** The process. */
     private Process process;
+
+    /** The exit value. */
     private int exitValue;
+
+    /** The ex. */
     private Exception ex;
 
+    /**
+     * Instantiates a new tbuild thread.
+     *
+     * @param parent the parent
+     * @throws KettleException the kettle exception
+     */
     TbuildThread( TeraDataBulkLoader parent ) throws KettleException {
       this.parent = parent;
       this.command = parent.createCommandLine();
@@ -245,6 +307,9 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
 
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Thread#run()
+     */
     public void run() {
       StringBuilder errors = new StringBuilder();
 
@@ -273,6 +338,11 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
 
     }
 
+    /**
+     * Check excn.
+     *
+     * @throws Exception the exception
+     */
     void checkExcn() throws Exception {
       // This is called from the main thread context to rethrow any saved
       // excn.
@@ -282,6 +352,9 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     }
   }
 
+  /** 
+   * Process individual incoming rows
+   */
   public boolean processRow( StepMetaInterface smi, StepDataInterface sdi ) throws KettleException {
     meta = (TeraDataBulkLoaderMeta) smi;
     data = (TeraDataBulkLoaderData) sdi;
@@ -308,7 +381,6 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
         data.bulkFormatMeta = new ValueMetaInterface[data.keynrs.length];
         // execute the client statement...
         //
-        System.out.println( "Running meta:" + meta );
         execute( meta );
       }
 
@@ -325,6 +397,11 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     }
   }
 
+  /**
+   * Close output.
+   *
+   * @throws Exception the exception
+   */
   private void closeOutput() throws Exception {
 
     if ( data.fifoStream != null ) {
@@ -344,6 +421,13 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     }
   }
 
+  /**
+   * Write row to bulk.
+   *
+   * @param rowMeta the row meta
+   * @param r the r
+   * @throws KettleException the kettle exception
+   */
   private void writeRowToBulk( RowMetaInterface rowMeta, Object[] r ) throws KettleException {
 
     try {
@@ -403,6 +487,9 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     }
   }
 
+  /**
+   * Initialize this step
+   */
   public boolean init( StepMetaInterface smi, StepDataInterface sdi ) {
     meta = (TeraDataBulkLoaderMeta) smi;
     data = (TeraDataBulkLoaderData) sdi;
@@ -413,6 +500,9 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     return false;
   }
 
+  /**
+   * Dispose of this step (called as a cleanup method)
+   */
   public void dispose( StepMetaInterface smi, StepDataInterface sdi ) {
     meta = (TeraDataBulkLoaderMeta) smi;
     data = (TeraDataBulkLoaderData) sdi;
@@ -449,18 +539,38 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
   // Class to try and open a writer to a fifo in a different thread.
   // Opening the fifo is a blocking call, so we need to check for errors
   // after a small waiting period
+  /**
+   * The Class OpenFifo.
+   */
   static class OpenFifo extends Thread {
+
+    /** The fifo stream. */
     private DataOutputStream fifoStream = null;
+
+    /** The ex. */
     private Exception ex;
+
+    /** The fifo name. */
     private String fifoName;
+
+    /** The size. */
     @SuppressWarnings( "unused" )
     private int size;
 
+    /**
+     * Instantiates a new open fifo.
+     *
+     * @param fifoName the fifo name
+     * @param size the size
+     */
     OpenFifo( String fifoName, int size ) {
       this.fifoName = fifoName;
       this.size = size;
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Thread#run()
+     */
     public void run() {
       try {
         fifoStream = new DataOutputStream( new FileOutputStream( OpenFifo.this.fifoName ) );
@@ -469,6 +579,11 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
       }
     }
 
+    /**
+     * Check exception.
+     *
+     * @throws Exception the exception
+     */
     void checkExcn() throws Exception {
       // This is called from the main thread context to rethrow any saved
       // excn.
@@ -477,6 +592,11 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
       }
     }
 
+    /**
+     * Gets the fifo stream.
+     *
+     * @return the fifo stream
+     */
     DataOutputStream getFifoStream() {
       return fifoStream;
     }
