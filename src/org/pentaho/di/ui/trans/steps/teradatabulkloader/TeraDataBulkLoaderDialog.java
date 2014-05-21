@@ -283,7 +283,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     }
 
     public void addButton( String label ) {
-      Button button = new Button( this, SWT.RADIO | SWT.RIGHT | SWT.BORDER );
+      Button button = new Button( this, SWT.RADIO | SWT.RIGHT );
       button.setText( label );
       props.setLook( button );
       button.addListener( SWT.Selection, lsActionType );
@@ -391,7 +391,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     }
 
     public Button addButton( String label, int radio ) {
-      Button button = new Button( composite, radio | SWT.RIGHT | SWT.BORDER );
+      Button button = new Button( composite, radio | SWT.RIGHT );
       if ( !Const.isEmpty( label ) ) {
         button.setText( BaseMessages.getString( PKG, label ) );
       }
@@ -414,11 +414,6 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
       rc.addButtons( labels );
       add( rc );
       return rc;
-    }
-
-    @SuppressWarnings( "unused" )
-    public RadioComposite addRadioComposite( String[] actionTypes, int i ) {
-      return addRadioComposite( actionTypes, i, null, null );
     }
 
     @SuppressWarnings( "unused" )
