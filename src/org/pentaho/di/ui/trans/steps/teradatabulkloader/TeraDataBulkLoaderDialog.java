@@ -1244,7 +1244,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     wCancel.setText( BaseMessages.getString( PKG, "System.Button.Cancel" ) );
     // Preview Button
     wPreviewScript = new Button( shell, SWT.PUSH );
-    wPreviewScript.setText( "Preview Script" );
+    wPreviewScript.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Preview.Button" ) );
 
     setButtonPositions( new Button[] { wOK, wPreviewScript, wCancel }, margin, null );
 
@@ -1300,13 +1300,6 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
         getUpdate();
       }
     };
-    // lsSQL = new Listener()
-    // {
-    // public void handleEvent(Event e)
-    // {
-    // create();
-    // }
-    // };
 
     lsCancel = new Listener() {
       public void handleEvent( Event e ) {
@@ -1523,7 +1516,8 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     }
 
     if ( input.getFieldTable() != null ) {
-      logDebug( "field table has length " + input.getFieldTable().length );
+      logDebug(
+          BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.FieldTableLength", input.getFieldTable().length ) );
       for ( int i = 0; i < input.getFieldTable().length; i++ ) {
         TableItem item = wReturn.table.getItem( i );
         if ( input.getFieldTable()[i] != null ) {
@@ -1727,7 +1721,6 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     // return fields
     ciReturn[1].setComboValues( fieldNames );
     ciKey[2].setComboValues( fieldNames );
-    // ciKey[3].setComboValues(fieldNames);
   }
 
   /**
@@ -1750,8 +1743,6 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     int nrfields = wReturn.nrNonEmpty();
 
     inf.allocate( nrkeys, nrfields );
-
-    // inf.setLocalFile( wLocal.getSelection() );
 
     if ( log.isDebug() ) {
       logDebug( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Log.FoundFields", "" + nrfields ) );
@@ -2065,13 +2056,11 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
       Shell mb = new Shell();
       mb.setLayout( new FillLayout() );
       Text msg = new Text( mb, SWT.BORDER_SOLID | SWT.MULTI | SWT.V_SCROLL );
-      mb.setText( "Preview" );
+      mb.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Preview.MessageBoxTitle" ) );
       msg.setText( script );
       msg.setEditable( false );
-      // mb.add(msg);
       mb.open();
     } catch ( Exception e ) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
   }

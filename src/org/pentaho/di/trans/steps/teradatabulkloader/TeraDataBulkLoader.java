@@ -126,7 +126,7 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     // Ready to start writing rows to the FIFO file now...
     //
     if ( !Const.isWindows() ) {
-      logDetailed( "Opening fifo " + data.fifoFilename + " for writing." );
+      logDetailed( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.OpeningPipe", data.fifoFilename ) );
       OpenFifo openFifo = new OpenFifo( data.fifoFilename, 1000 );
       openFifo.start();
 
@@ -182,7 +182,7 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
         // MKFIFO!
         //
         String mkFifoCmd = "mkfifo " + data.fifoFilename;
-        logDetailed( "Creating FIFO file using this command : " + mkFifoCmd );
+        logDetailed( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.CreatePipe", mkFifoCmd ) );
         Process mkFifoProcess = rt.exec( mkFifoCmd );
         StreamLogger errorLogger = new StreamLogger( log, mkFifoProcess.getErrorStream(), "mkFifoError" );
         StreamLogger outputLogger = new StreamLogger( log, mkFifoProcess.getInputStream(), "mkFifoOuptut" );
@@ -190,11 +190,12 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
         new Thread( outputLogger ).start();
         int result = mkFifoProcess.waitFor();
         if ( result != 0 ) {
-          throw new Exception( "Return code " + result + " received from statement : " + mkFifoCmd );
+          throw new Exception( BaseMessages.getString( PKG,
+              "TeraDataBulkLoader.Exception.CommandReturnCodeError", result, mkFifoCmd ) );
         }
 
         String chmodCmd = "chmod 666 " + data.fifoFilename;
-        logDetailed( "Setting FIFO file permissings using this command : " + chmodCmd );
+        logDetailed( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.SetPipePermissions", chmodCmd ) );
         Process chmodProcess = rt.exec( chmodCmd );
         errorLogger = new StreamLogger( log, chmodProcess.getErrorStream(), "chmodError" );
         outputLogger = new StreamLogger( log, chmodProcess.getInputStream(), "chmodOuptut" );
@@ -202,7 +203,8 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
         new Thread( outputLogger ).start();
         result = chmodProcess.waitFor();
         if ( result != 0 ) {
-          throw new Exception( "Return code " + result + " received from statement : " + chmodCmd );
+          throw new Exception( BaseMessages.getString( PKG,
+              "TeraDataBulkLoader.Exception.CommandReturnCodeError", result, chmodCmd ) );
         }
       }
       // 3) Now we are ready to run the load command...
@@ -225,7 +227,7 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
    */
   public String createCommandLine() throws KettleException {
     if ( StringUtils.isBlank( this.meta.getTbuildPath() ) ) {
-      throw new KettleException( "tbuild path not set" );
+      throw new KettleException( BaseMessages.getString( PKG, "TeraDataBulkLoader.Exception.BuildPathNotSet" ) );
     }
     final StringBuilder builder = new StringBuilder();
     try {
@@ -243,7 +245,8 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
       }
       builder.append( this.meta.getJobName() );
     } catch ( Exception e ) {
-      throw new KettleException( "Error retrieving tbuild application string", e );
+      throw new KettleException(
+          BaseMessages.getString( PKG, "TeraDataBulkLoader.Exception.ErrorBuildAppString" ), e );
     }
     // Add log error log, if set.
     return builder.toString();
@@ -313,8 +316,9 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     public void run() {
       StringBuilder errors = new StringBuilder();
 
-      parent.logBasic( "Running tbuild command: " + command );
-      parent.logBasic( "Env: " + StringUtils.join( environment, ":" ) );
+      parent.logBasic( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.RunCommand", command ) );
+      parent.logBasic( BaseMessages.getString( PKG,
+          "TeraDataBulkLoader.Log.Environment", StringUtils.join( environment, ":" ) ) );
 
       try {
         this.process = Runtime.getRuntime().exec( command, environment );
@@ -330,7 +334,8 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
         }
         exitValue = process.waitFor();
         if ( exitValue > 0 ) {
-          this.ex = new KettleException( "Tbuild process exited with code " + exitValue + "\n" + errors.toString() );
+          this.ex = new KettleException( BaseMessages.getString( PKG,
+              "TeraDataBulkLoader.Exception.TBuildProcessError", exitValue, errors.toString() ) );
         }
       } catch ( Exception e ) {
         this.ex = e;
@@ -413,7 +418,7 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     if ( data.tbuildThread != null ) {
 
       // wait for the thread to finish and check for any error and/or warning...
-      logBasic( "Waiting up to " + this.threadWaitTimeText + " for the tbuild command thread to finish processing." );
+      logBasic( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.WaitForTBuild", this.threadWaitTimeText ) );
       data.tbuildThread.join( this.threadWaitTime );
       TbuildThread tbuildThread = data.tbuildThread;
       data.tbuildThread = null;
@@ -460,30 +465,29 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
             data.fifoStream.write( TeraDataBulkLoaderRoutines.convertBignum( bn ) );
             break;
           default:
-            logError( "This is seen when a type in the PDI stream is not handleed by the step.  Type is "
-                + valueMeta.getType() );
-            throw new KettleException( "Unsupported type in stream" );
+            logError( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.UnsupportedType", valueMeta.getType() ) );
+            throw new KettleException( BaseMessages.getString( PKG,
+                "TeraDataBulkLoader.Exception.UnsupportedType", valueMeta.getType() ) );
         }
       }
 
     } catch ( IOException e ) {
       // If something went wrong with writing to the fifo, get the underlying error from MySQL
       try {
-        logError( "IOException writing to fifo.  Waiting up to " + this.threadWaitTimeText
-            + " for the tbuild command thread to return with the error." );
+        logError( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.ErrorDuringWrite", this.threadWaitTimeText ) );
       } catch ( Exception loadEx ) {
-        logError( "Caught Loadex error :" + loadEx );
+        logError( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.LoadexError", loadEx ) );
         throw new KettleException( "loadEx Error serializing rows of data to the fifo file 1", loadEx );
       }
 
       // throw the generic "Pipe" exception.
-      logError( "Caught IO error (pipe?):" + e );
-      throw new KettleException( "IO Error serializing rows of data to the fifo file 2", e );
+      logError( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.IOError" ), e );
+      throw new KettleException( BaseMessages.getString( PKG, "TeraDataBulkLoader.Exception.IOError" ), e );
 
     } catch ( Exception e2 ) {
-      logError( "Caught some error :" + e2 );
+      logError( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.UnknownError" ), e2 );
       // Null pointer exceptions etc.
-      throw new KettleException( "Error serializing rows of data to the fifo file", e2 );
+      throw new KettleException( BaseMessages.getString( PKG, "TeraDataBulkLoader.Exception.UnknownError" ), e2 );
     }
   }
 
@@ -526,21 +530,19 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
           new File( data.fifoFilename ).delete();
         }
       } catch ( Exception e ) {
-        logError( "Unable to delete FIFO file : " + data.fifoFilename, e );
+        logError( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.CannotDeletePipe", data.fifoFilename ), e );
       }
     } catch ( Exception e ) {
       setErrors( 1L );
-      logError( "Unexpected error encountered while closing the client connection", e );
+      logError( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.CloseConnectionError" ), e );
     }
 
     super.dispose( smi, sdi );
   }
 
-  // Class to try and open a writer to a fifo in a different thread.
-  // Opening the fifo is a blocking call, so we need to check for errors
-  // after a small waiting period
   /**
-   * The Class OpenFifo.
+   *  Class to try and open a writer to a fifo in a different thread.
+   *  Opening the fifo is a blocking call, so we need to check for errors
    */
   static class OpenFifo extends Thread {
 

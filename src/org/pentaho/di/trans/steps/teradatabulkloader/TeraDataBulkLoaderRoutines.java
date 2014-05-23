@@ -370,7 +370,7 @@ public class TeraDataBulkLoaderRoutines {
           type = "BYTEINT";
           break;
         default:
-          throw new KettleException( "Unhandled type in stream" );
+          throw new KettleException( BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.Exception.UnhandledType" ) );
       }
       fieldList.add( name + "     " + type );
     }
@@ -455,27 +455,28 @@ public class TeraDataBulkLoaderRoutines {
   public String createScriptFile() throws Exception {
     File tempScriptFile;
 
-    if ( this.meta.getGenerateScript() ) {
-      tempScriptFile = File.createTempFile( FilenameUtils.getBaseName( this.meta.getScriptFileName() ), "" );
+    if ( meta.getGenerateScript() ) {
+      tempScriptFile = File.createTempFile( FilenameUtils.getBaseName( meta.getScriptFileName() ), "" );
     } else {
-      tempScriptFile = File.createTempFile( FilenameUtils.getBaseName( this.meta.getExistingScriptFile() ), "" );
+      tempScriptFile = File.createTempFile( FilenameUtils.getBaseName( meta.getExistingScriptFile() ), "" );
     }
     tempScriptFile.deleteOnExit();
 
     try {
-      this.scriptFile = FileUtils.openOutputStream( tempScriptFile );
-      this.scriptFilePrintStream = new PrintStream( scriptFile );
+      scriptFile = FileUtils.openOutputStream( tempScriptFile );
+      scriptFilePrintStream = new PrintStream( scriptFile );
     } catch ( IOException e ) {
-      throw new KettleException( "Cannot open script file [path=" + this.scriptFile + "]", e );
+      throw new KettleException(
+          BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.Exception.OpenScriptFile", scriptFile ), e );
     }
 
-    if ( this.meta.getGenerateScript() ) {
+    if ( meta.getGenerateScript() ) {
       createGeneratedScriptFile();
     } else {
       createFromExistingScriptFile();
     }
-    this.scriptFilePrintStream.close();
-    IOUtils.closeQuietly( this.scriptFile );
+    scriptFilePrintStream.close();
+    IOUtils.closeQuietly( scriptFile );
     return tempScriptFile.getAbsolutePath();
   }
 
@@ -536,13 +537,13 @@ public class TeraDataBulkLoaderRoutines {
     throws Exception {
     // Schema info
     boolean isPreview = parent == null;
-    String hiddenPassword = "*** password hidden in preview ***";
+    String hiddenPassword = BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.HiddenPassword" );
 
     DefineSchema tableSchema = new DefineSchema( this.meta.getSchemaName() );
     // Iterate over the FieldStream array, add each with its types
     String[] fieldStream = this.meta.getFieldStream();
     if ( inputFieldTypes.size() == 0 || fieldStream == null || inputFieldTypes == null || inputFieldLength == null ) {
-      return ( "No input stream - disabled hop?" );
+      return ( BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.NoInputStream" ) );
     }
     System.out.println( "fieldStream length is " + fieldStream.length );
     for ( int i = 0; i < fieldStream.length; i++ ) {
