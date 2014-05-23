@@ -56,13 +56,7 @@ import org.w3c.dom.Node;
 import org.pentaho.di.core.annotations.Step;
 
 /**
- * Teradata TPT Insert Upsert Bulk Loader<br>
- * <br>
- * Derived from package org.pentaho.di.trans.steps.terafast;<br>
- * Compatible with Kettle 4.4.x <br>
- * Created on 29-oct-2013<br>
- * 
- * @author Kevin Hanrahan<br>
+ * Teradata TPT Insert Upsert Bulk Loader
  */
 
 @Step( id = "TeraDataBulkLoader", image = "TDTPTBL.png", name = "Teradata TPT Insert Upsert Bulk Loader",
@@ -1210,7 +1204,6 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
       }
 
       generateScript = rep.getStepAttributeBoolean( id_step, "generateScript" );
-      // connection = rep.getStepAttributeString(id_step, "connection");
       tbuildPath = rep.getStepAttributeString( id_step, "tbuildPath" );
       tbuildLibPath = rep.getStepAttributeString( id_step, "tbuildLibPath" );
       libPath = rep.getStepAttributeString( id_step, "libPath" );
@@ -1481,7 +1474,8 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
             tableField.setName( fieldTable[i] );
             tableFields.addValueMeta( tableField );
           } else {
-            throw new KettleStepException( "Unable to find field [" + fieldStream[i] + "] in the input rows" );
+            throw new KettleStepException( BaseMessages.getString( PKG,
+                "TeraDataBulkLoaderMeta.Exception.CannotFindFieldInInput", fieldStream[i] ) );
           }
         }
 
