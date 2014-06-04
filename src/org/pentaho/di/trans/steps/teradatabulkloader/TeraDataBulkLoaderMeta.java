@@ -225,6 +225,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    *
    * @return Returns the database.
    */
+  @Override
   public DatabaseMeta getDatabaseMeta() {
     return databaseMeta;
   }
@@ -668,6 +669,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   /* (non-Javadoc)
    * @see org.pentaho.di.core.ProvidesDatabaseConnectionInformation#getSchemaName()
    */
+  @Override
   public String getSchemaName() {
     return this.schemaName;
   }
@@ -827,6 +829,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   /* (non-Javadoc)
    * @see org.pentaho.di.core.ProvidesDatabaseConnectionInformation#getTableName()
    */
+  @Override
   public String getTableName() {
     return tableName;
   }
@@ -975,6 +978,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   /* (non-Javadoc)
    * @see org.pentaho.di.trans.step.BaseStepMeta#clone()
    */
+  @Override
   public Object clone() {
     TeraDataBulkLoaderMeta retval = (TeraDataBulkLoaderMeta) super.clone();
     int nrvalues = fieldTable.length;
@@ -1094,15 +1098,18 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   /* (non-Javadoc)
    * @see org.pentaho.di.trans.step.StepMetaInterface#setDefault()
    */
+  @Override
   public void setDefault() {
     fieldTable = null;
     databaseMeta = null;
+    generateScript = true;
     allocate( 0, 0 );
   }
 
   /* (non-Javadoc)
    * @see org.pentaho.di.trans.step.BaseStepMeta#getXML()
    */
+  @Override
   public String getXML() {
     StringBuffer retval = new StringBuffer( 3000 );
 
@@ -1516,6 +1523,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   /**
    * Get the StepInterface associated with this step metadata
    */
+  @Override
   public StepInterface getStep( StepMeta stepMeta, StepDataInterface stepDataInterface, int cnr, TransMeta transMeta,
       Trans trans ) {
     myStep = new TeraDataBulkLoader( stepMeta, stepDataInterface, cnr, transMeta, trans );
@@ -1525,6 +1533,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   /* (non-Javadoc)
    * @see org.pentaho.di.trans.step.StepMetaInterface#getStepData()
    */
+  @Override
   public StepDataInterface getStepData() {
     return new TeraDataBulkLoaderData();
   }
@@ -1532,6 +1541,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   /* (non-Javadoc)
    * @see org.pentaho.di.trans.step.BaseStepMeta#getUsedDatabaseConnections()
    */
+  @Override
   public DatabaseMeta[] getUsedDatabaseConnections() {
     if ( databaseMeta != null ) {
       return new DatabaseMeta[] { databaseMeta };
@@ -1543,6 +1553,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   /* (non-Javadoc)
    * @see org.pentaho.di.trans.step.BaseStepMeta#getRequiredFields(org.pentaho.di.core.variables.VariableSpace)
    */
+  @Override
   public RowMetaInterface getRequiredFields( VariableSpace space ) throws KettleException {
     String realTableName = space.environmentSubstitute( tableName );
     String realSchemaName = space.environmentSubstitute( schemaName );

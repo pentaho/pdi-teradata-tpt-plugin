@@ -1,4 +1,3 @@
-//CHECKSTYLE:FileLength:OFF
 /*******************************************************************************
  *
  * Pentaho Data Integration
@@ -24,10 +23,10 @@
 package org.pentaho.di.ui.trans.steps.teradatabulkloader;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
@@ -44,17 +43,14 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
@@ -75,13 +71,11 @@ import org.pentaho.di.trans.step.StepMetaInterface;
 import org.pentaho.di.trans.steps.teradatabulkloader.TeraDataBulkLoader;
 import org.pentaho.di.trans.steps.teradatabulkloader.TeraDataBulkLoaderMeta;
 import org.pentaho.di.trans.steps.teradatabulkloader.TeraDataBulkLoaderRoutines;
-import org.pentaho.di.ui.core.database.dialog.DatabaseExplorerDialog;
 import org.pentaho.di.ui.core.dialog.EnterMappingDialog;
 import org.pentaho.di.ui.core.dialog.ErrorDialog;
 import org.pentaho.di.ui.core.gui.GUIResource;
 import org.pentaho.di.ui.core.widget.ColumnInfo;
 import org.pentaho.di.ui.core.widget.TableView;
-import org.pentaho.di.ui.core.widget.TextVar;
 import org.pentaho.di.ui.trans.step.BaseStepDialog;
 import org.pentaho.di.ui.trans.step.TableItemInsertListener;
 
@@ -92,7 +86,7 @@ import org.pentaho.di.ui.trans.step.TableItemInsertListener;
 public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDialogInterface {
 
   /** The pkg. */
-  private static Class<?> PKG = TeraDataBulkLoaderMeta.class; // for i18n purposes, needed by Translator2!! $NON-NLS-1$
+  static Class<?> PKG = TeraDataBulkLoaderMeta.class; // for i18n purposes, needed by Translator2!! $NON-NLS-1$
 
   /** The Constant NO_BUTTON. */
   static final int NO_BUTTON = 0;
@@ -112,121 +106,24 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
   /** The Constant NO_VAR. */
   static final int NO_VAR = 16;
 
+  private Integer lastTypeSelection = -1;
+
+  private final List<DialogPopulator> dialogPopulators = new ArrayList<DialogPopulator>();
+
   /* The "useful" widgets are listed first for clarity. Associated labels, buttons form data follow...... */
   /** ************************* These variables are common to both generated and existing scripts **************. */
-  private CCombo wConnection;
+  CCombo wConnection;
 
   /** The item set. */
   CTabFolder fItemSet = null;
-
-  /** The ti execution items. */
-  private CTabItem tiExecutionItems = null;
-
-  /** The ti use script items. */
-  private CTabItem tiUseScriptItems = null;
-
-  /** The ti gen script control items. */
-  private CTabItem tiGenScriptControlItems = null;
-
-  /** The ti gen script fields. */
-  private CTabItem tiGenScriptFields = null;
-
-  /** The c execution items. */
-  private Composite cExecutionItems;
-
-  /** The c gen script control items. */
-  private Composite cGenScriptControlItems;
-
-  /** The c gen script fields. */
-  private Composite cGenScriptFields;
-
-  /** The c use script items. */
-  private Composite cUseScriptItems;
-
-  /** The c gen script control items disable msg. */
-  private TextVarMenuItem cGenScriptControlItemsDisableMsg;
-
-  /** The c gen script fields disable msg. */
-  private TextVarMenuItem cGenScriptFieldsDisableMsg;
-
-  /** The c use script items disable msg. */
-  private TextVarMenuItem cUseScriptItemsDisableMsg;
-
-  /** ** these go into the "Execution Environment" tab. */
-  private TextVarMenuItem wTbuildPath; // (tbuildPath)
-
-  /** The w data file. */
-  private TextVarMenuItem wDataFile; // (fifoFileName)
-
-  /** The w job name. */
-  private TextVarMenuItem wJobName; //
-
-  /** The w twb root. */
-  private TextVarMenuItem wTwbRoot;
-
-  /** The w td install. */
-  private TextVarMenuItem wTdInstall;
-
-  /** The w tbuild lib path. */
-  private TextVarMenuItem wTbuildLibPath;
-
-  /** The w tdicu lib path. */
-  private TextVarMenuItem wTdicuLibPath;
-
-  /** The w lib path. */
-  private TextVarMenuItem wLibPath;
-
-  /** The w cop lib path. */
-  private TextVarMenuItem wCopLibPath;
 
   /* the remainder go into "Script Configuration" tab */
   /** The c script option. */
   private RadioComposite cScriptOption; // (generateScript) - single boolean variable
 
   /** ************************* These variables are for using a pre-existing control file **************. */
-  private TextVarMenuItem wControlFile, wVariableFile; // (controlFile, variableFile)
-
-  /** The wb substitute control file. */
-  private Button wbSubstituteControlFile; // (substituteControlFile, substituteVariableFile)
 
   /** ************************* These variables are for using a generated control file **************. */
-  private TextVarMenuItem wSchema; // (schemaName)
-
-  /** (tableName) target table */
-  private TextVarMenuItem wTable;
-
-  /** (logTable) */
-  private TextVarMenuItem wLogTable;
-
-  /** The w work table. */
-  private TextVarMenuItem wWorkTable; // (workTable)
-
-  /** The w error table. */
-  private TextVarMenuItem wErrorTable; // (errorTable)
-
-  /** The w error table2. */
-  private TextVarMenuItem wErrorTable2; // (errorTable2)
-
-  /** The wb drop work. */
-  private Button wbDropError, wbDropError2, wbDropLog, wbDropWork; // (dropErrorTable, dropErrorTable2, dropLogTable,
-                                                                   // dropWorkTable)
-  /** The wb ignore missing update. */
-  private Button wbIgnoreDupUpdate, wbInsertMissingUpdate, wbIgnoreMissingUpdate;
-
-  /** The w access log file. */
-  private TextVarMenuItem wAccessLogFile; // (accessLogFile)
-
-  /** The w update log file. */
-  private TextVarMenuItem wUpdateLogFile; // (updateLogFile)
-
-  /** The w script file. */
-  private TextVarMenuItem wScriptFile; // (scriptFileName) filename of generated script
-
-  /** The c action type. */
-  private RadioComposite cActionType; // (actionType)
-
-  /** The w return. */
-  private TableView wKey, wReturn;
 
   /** The w preview script. */
   private Button wPreviewScript;
@@ -235,676 +132,37 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
   CompositeMenuItem wbControlFile;
 
   /** The input. */
-  private TeraDataBulkLoaderMeta input;
+  TeraDataBulkLoaderMeta input;
 
   /** ********************************** associated widgets for generated script ****************. */
-  private Label wlKey, wlReturn;
-
-  /** The fd return. */
-  private FormData fdlReturn, fdReturn;
-
-  /** The w get mapping. */
-  private Button wGetMapping;
-
-  /** The fd get lu. */
-  private FormData fdGetLU;
-
-  /** The ls get lu. */
-  private Listener lsGetLU;
-
-  /** The w do mapping. */
-  private Button wDoMapping;
-
-  /** The fd do mapping. */
-  private FormData fdDoMapping;
-
-  /** The ci return. */
-  private ColumnInfo[] ciKey, ciReturn;
-
-  /** The input fields. */
-  private Map<String, Integer> inputFields;
-
-  /** The input field type. */
-  private Map<String, Integer> inputFieldType;
-
-  /** The input field length. */
-  private Map<String, Integer> inputFieldLength;
 
   /** List of ColumnInfo that should have the field names of the selected database table. */
   private List<ColumnInfo> tableFieldColumns = new ArrayList<ColumnInfo>();
 
-  /**
-   * The listener interface for receiving tableSelectionButton events.
-   * The class that is interested in processing a tableSelectionButton
-   * event implements this interface, and the object created
-   * with that class is registered with a component using the
-   * component's <code>addTableSelectionButtonListener<code> method. When
-   * the tableSelectionButton event occurs, that object's appropriate
-   * method is invoked.
-   *
-   * @see TableSelectionButtonEvent
-   */
-  private class TableSelectionButtonListener extends SelectionAdapter {
+  private CompositeMenuItem wScriptOption;
 
-    /** The text widget. */
-    TextVar textWidget;
-
-    /**
-     * Instantiates a new table selection button listener.
-     *
-     * @param textWidget the text widget
-     */
-    TableSelectionButtonListener( TextVar textWidget ) {
-      super();
-      this.textWidget = textWidget;
-    }
-
-    /* (non-Javadoc)
-     * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-     */
-    public void widgetSelected( SelectionEvent e ) {
-      DatabaseMeta inf = null;
-      // New class: SelectTableDialog
-      int connr = wConnection.getSelectionIndex();
-      if ( connr >= 0 ) {
-        inf = transMeta.getDatabase( connr );
-      }
-
-      if ( inf != null ) {
-        if ( log.isDebug() ) {
-          logDebug( BaseMessages.getString( PKG,
-              "TeraDataBulkLoaderDialog.Log.LookingAtConnection" ) + inf.toString() );
-        }
-
-        DatabaseExplorerDialog std = new DatabaseExplorerDialog( shell, SWT.NONE, inf, transMeta.getDatabases() );
-        std.setSelectedSchemaAndTable( wSchema.getText(), wTable.getText() );
-        if ( std.open() ) {
-          wSchema.setText( Const.NVL( std.getSchemaName(), "" ) );
-          this.textWidget.setText( Const.NVL( std.getTableName(), "" ) );
-          setTableFieldCombo();
-        }
-      } else {
-        MessageBox mb = new MessageBox( shell, SWT.OK | SWT.ICON_ERROR );
-        mb.setMessage( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.InvalidConnection.DialogMessage" ) );
-        mb.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.InvalidConnection.DialogTitle" ) );
-        mb.open();
-      }
-    }
-  }
-
-  /**
-   * The listener interface for receiving fileSelectionButton events.
-   * The class that is interested in processing a fileSelectionButton
-   * event implements this interface, and the object created
-   * with that class is registered with a component using the
-   * component's <code>addFileSelectionButtonListener<code> method. When
-   * the fileSelectionButton event occurs, that object's appropriate
-   * method is invoked.
-   *
-   * @see FileSelectionButtonEvent
-   */
-  private class FileSelectionButtonListener extends SelectionAdapter {
-
-    /** The text widget. */
-    TextVar textWidget;
-
-    /**
-     * Instantiates a new file selection button listener.
-     *
-     * @param textWidget the text widget
-     */
-    FileSelectionButtonListener( TextVar textWidget ) {
-      super();
-      this.textWidget = textWidget;
-    }
-
-    /* (non-Javadoc)
-     * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-     */
-    public void widgetSelected( SelectionEvent e ) {
-      FileDialog dialog = new FileDialog( shell, SWT.OPEN );
-      if ( dialog.open() != null ) {
-        String str = dialog.getFilterPath() + System.getProperty( "file.separator" ) + dialog.getFileName();
-        this.textWidget.setText( str );
-      }
-    }
-  }
-
-  /**
-   * The listener interface for receiving directorySelectionButton events.
-   * The class that is interested in processing a directorySelectionButton
-   * event implements this interface, and the object created
-   * with that class is registered with a component using the
-   * component's <code>addDirectorySelectionButtonListener<code> method. When
-   * the directorySelectionButton event occurs, that object's appropriate
-   * method is invoked.
-   *
-   * @see DirectorySelectionButtonEvent
-   */
-  private class DirectorySelectionButtonListener extends SelectionAdapter {
-
-    /** The text widget. */
-    TextVar textWidget;
-
-    /**
-     * Instantiates a new directory selection button listener.
-     *
-     * @param textWidget the text widget
-     */
-    DirectorySelectionButtonListener( TextVar textWidget ) {
-      super();
-      this.textWidget = textWidget;
-    }
-
-    /* (non-Javadoc)
-     * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
-     */
-    public void widgetSelected( SelectionEvent e ) {
-      DirectoryDialog dialog = new DirectoryDialog( shell, SWT.OPEN );
-      if ( dialog.open() != null ) {
-        String str = dialog.getFilterPath() + System.getProperty( "file.separator" ) + dialog.getText();
-        this.textWidget.setText( str );
-      }
-    }
-  }
-
-  /**
-   * The Class RadioComposite.
-   */
-  private class RadioComposite extends Composite {
-
-    /** The ls action type. */
-    private Listener lsActionType;
-
-    /** The ls passed listener. */
-    private Listener lsPassedListener = null;
-
-    /**
-     * Instantiates a new radio composite.
-     *
-     * @param parent the parent
-     * @param opts the opts
-     */
-    RadioComposite( Composite parent, int opts ) {
-      super( parent, opts );
-      lsActionType = new Listener() {
-        public void handleEvent( Event event ) {
-          Control[] children = getChildren();
-          for ( int j = 0; j < children.length; j++ ) {
-            Control child = children[j];
-            if ( child instanceof Button ) {
-              Button bc = (Button) child;
-              bc.setSelection( false );
-            }
-          }
-          Button button = (Button) event.widget;
-          button.setSelection( true );
-          input.setChanged();
-        }
-      };
-    }
-
-    /**
-     * Adds the listener.
-     *
-     * @param ls the ls
-     */
-    public void addListener( Listener ls ) {
-      this.lsPassedListener = ls;
-    }
-
-    /**
-     * Adds the buttons.
-     *
-     * @param labels the labels
-     */
-    public void addButtons( String[] labels ) {
-      for ( int i = 0; i < labels.length; i++ ) {
-        this.addButton( labels[i] );
-      }
-    }
-
-    /**
-     * Adds the button.
-     *
-     * @param label the label
-     */
-    public void addButton( String label ) {
-      Button button = new Button( this, SWT.RADIO | SWT.RIGHT );
-      button.setText( label );
-      props.setLook( button );
-      button.addListener( SWT.Selection, lsActionType );
-      if ( lsPassedListener != null ) {
-        button.addListener( SWT.Selection, lsPassedListener );
-      }
-    }
-
-    /**
-     * Gets the selection.
-     *
-     * @return the selection
-     */
-    public int getSelection() {
-      Control[] children = getChildren();
-      for ( int j = 0; j < children.length; j++ ) {
-        Control child = children[j];
-        if ( child instanceof Button ) {
-          Button bc = (Button) child;
-          if ( bc.getSelection() ) {
-            return j;
-          }
-        }
-      }
-      return 0;
-    }
-
-    /**
-     * Sets the selection.
-     *
-     * @param index the new selection
-     */
-    public void setSelection( int index ) {
-      Control[] children = getChildren();
-      for ( int j = 0; j < children.length; j++ ) {
-        Control child = children[j];
-        if ( child instanceof Button ) {
-          Button bc = (Button) child;
-          if ( j == index ) {
-            bc.setSelection( true );
-          } else {
-            bc.setSelection( false );
-          }
-        }
-      }
-      notifyListeners( SWT.SELECTED, new Event() );
-    }
-  }
-
-  /**
-   * The Class CompositeMenuItem.
-   */
-  private class CompositeMenuItem {
-
-    /** The label. */
-    private Label label;
-
-    /** The composite. */
-    private Composite composite;
-
-    /** The items. */
-    private List<Control> items = new ArrayList<Control>();
-
-    /** The margin. */
-    int margin = Const.MARGIN;
-
-    /** The middle. */
-    int middle = props.getMiddlePct();
-
-    /**
-     * Instantiates a new composite menu item.
-     *
-     * @param parent the parent
-     * @param top the top
-     * @param labelProp the label prop
-     * @param type the type
-     */
-    CompositeMenuItem( Composite parent, TextVarMenuItem top, String labelProp, int type ) {
-      this( parent, top.getButton(), labelProp, type );
-    }
-
-    /**
-     * Instantiates a new composite menu item.
-     *
-     * @param parent the parent
-     * @param top the top
-     * @param labelProp the label prop
-     * @param type the type
-     */
-    CompositeMenuItem( Composite parent, Control top, String labelProp, int type ) {
-      label = new Label( parent, SWT.RIGHT );
-      label.setText( BaseMessages.getString( PKG, labelProp ) );
-      FormData fdl = new FormData();
-      fdl.left = new FormAttachment( 0, margin );
-      if ( top == null ) {
-        fdl.top = new FormAttachment( 0, margin );
-      } else {
-        fdl.top = new FormAttachment( top, margin );
-      }
-      fdl.right = new FormAttachment( middle, -margin );
-      props.setLook( label );
-      label.setLayoutData( fdl );
-
-      composite = new Composite( parent, SWT.NONE );
-      composite.setLayout( new FormLayout() );
-
-      FormData fdc = new FormData();
-      fdc.left = new FormAttachment( label, 0 );
-      if ( top == null ) {
-        fdc.top = new FormAttachment( 0, 0 );
-      } else {
-        fdc.top = new FormAttachment( top, 0 );
-      }
-      fdc.right = new FormAttachment( 100, 0 );
-      composite.setLayoutData( fdc );
-      props.setLook( composite );
-    }
-
-    /**
-     * Gets the composite.
-     *
-     * @return the composite
-     */
-    public Composite getComposite() {
-      return composite;
-    }
-
-    /**
-     * Adds the.
-     *
-     * @param item the item
-     */
-    public void add( Control item ) {
-      FormData fd = new FormData();
-      fd.top = new FormAttachment( 0, margin );
-      if ( items.size() > 0 ) {
-        fd.left = new FormAttachment( items.get( items.size() - 1 ), margin );
-      } else {
-        fd.left = new FormAttachment( 0, margin );
-      }
-      item.setLayoutData( fd );
-      props.setLook( item );
-      items.add( item );
-    }
-
-    /**
-     * Adds the c combo.
-     *
-     * @return the c combo
-     */
-    @SuppressWarnings( "unused" )
-    public CCombo addCCombo() {
-      CCombo combo = new CCombo( composite, SWT.BORDER | SWT.READ_ONLY );
-      combo.setEditable( true );
-      props.setLook( combo );
-      combo.addModifyListener( lsMod );
-      add( combo );
-      return combo;
-    }
-
-    /**
-     * Adds the button.
-     *
-     * @param label the label
-     * @param radio the radio
-     * @return the button
-     */
-    public Button addButton( String label, int radio ) {
-      Button button = new Button( composite, radio | SWT.RIGHT );
-      if ( !Const.isEmpty( label ) ) {
-        button.setText( BaseMessages.getString( PKG, label ) );
-      }
-      button.addListener( SWT.CHECK, lsModSelect );
-      props.setLook( button );
-      add( button );
-      return button;
-    }
-
-    /**
-     * Adds the radio composite.
-     *
-     * @param labels the labels
-     * @param opts the opts
-     * @param p the p
-     * @param callback the callback
-     * @return the radio composite
-     */
-    public RadioComposite addRadioComposite( String[] labels, int opts, final Object p, final Runnable callback ) {
-      RadioComposite rc = new RadioComposite( composite, opts );
-      rc.setLayout( new RowLayout() );
-      if ( callback != null ) {
-        rc.addListener( new Listener() {
-          public void handleEvent( Event event ) {
-            callback.run();
-          }
-        } );
-      }
-      rc.addButtons( labels );
-      add( rc );
-      return rc;
-    }
-
-    /**
-     * Sets the visible.
-     *
-     * @param b the new visible
-     */
-    @SuppressWarnings( "unused" )
-    public void setVisible( boolean b ) {
-      label.setVisible( b );
-      composite.setVisible( b );
-    }
-
-  }
-
-  /**
-   * The Class TextVarMenuItem.
-   */
-  private class TextVarMenuItem {
-
-    /** The label. */
-    private Label label;
-
-    /** The button. */
-    private Button button;
-
-    /** The textvar. */
-    private TextVar textvar;
-
-    /** The text. */
-    private Text text;
-
-    /** The type. */
-    private int type;
-
-    /** The margin. */
-    int margin = Const.MARGIN;
-
-    /** The middle. */
-    int middle = props.getMiddlePct();
-
-    /**
-     * Instantiates a new text var menu item.
-     *
-     * @param parent the parent
-     * @param top the top
-     * @param labelProp the label prop
-     * @param buttonType the button type
-     */
-    TextVarMenuItem( Composite parent, TextVarMenuItem top, String labelProp, int buttonType ) {
-      this( parent, top.getButton(), labelProp, buttonType );
-    }
-
-    /**
-     * Instantiates a new text var menu item.
-     *
-     * @param parent the parent
-     * @param top the top
-     * @param labelProp the label prop
-     * @param buttonType the button type
-     */
-    TextVarMenuItem( Composite parent, CompositeMenuItem top, String labelProp, int buttonType ) {
-      this( parent, top.getComposite(), labelProp, buttonType );
-    }
-
-    /**
-     * Instantiates a new text var menu item.
-     *
-     * @param parent the parent
-     * @param top the top
-     * @param labelProp the label prop
-     * @param buttonType the button type
-     */
-    TextVarMenuItem( Composite parent, Control top, String labelProp, int buttonType ) {
-      type = buttonType;
-
-      button = new Button( parent, SWT.PUSH | SWT.CENTER );
-      button.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Browse.Button" ) );
-      props.setLook( button );
-      FormData fdb = new FormData();
-      if ( top == null ) {
-        fdb.top = new FormAttachment( 0, margin );
-      } else {
-        fdb.top = new FormAttachment( top, margin );
-      }
-      fdb.right = new FormAttachment( 100, -margin );
-      button.setLayoutData( fdb );
-      if ( type == NO_BUTTON || type == NO_VAR || type == LABEL_ONLY ) {
-        button.setVisible( false );
-        button.dispose();
-        button = null;
-      }
-
-      label = new Label( parent, SWT.RIGHT );
-      label.setText( BaseMessages.getString( PKG, labelProp ) );
-      FormData fdl = new FormData();
-      fdl.left = new FormAttachment( 0, margin );
-      if ( top == null ) {
-        fdl.top = new FormAttachment( 0, margin );
-      } else {
-        fdl.top = new FormAttachment( top, margin );
-      }
-      if ( ( type & LABEL_ONLY ) != 0 ) {
-        fdl.right = new FormAttachment( 100, -margin );
-        label.setLayoutData( fdl );
-        label.setAlignment( SWT.CENTER );
-        return;
-      }
-      fdl.right = new FormAttachment( middle, -margin );
-      props.setLook( label );
-      label.setLayoutData( fdl );
-
-      FormData fdt = new FormData();
-      fdt.left = new FormAttachment( middle, margin );
-      if ( top == null ) {
-        fdt.top = new FormAttachment( 0, margin );
-      } else {
-        fdt.top = new FormAttachment( top, margin );
-      }
-      if ( type == NO_BUTTON || type == NO_VAR || type == LABEL_ONLY ) {
-        fdt.right = new FormAttachment( 100, -margin );
-      } else {
-        fdt.right = new FormAttachment( button, -margin );
-      }
-      if ( type == NO_VAR ) {
-        text = new Text( parent, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
-        props.setLook( text );
-        text.addModifyListener( lsMod );
-        text.setLayoutData( fdt );
-      } else {
-        textvar = new TextVar( transMeta, parent, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
-        props.setLook( textvar );
-        textvar.addModifyListener( lsMod );
-        textvar.setLayoutData( fdt );
-      }
-
-      switch ( type ) {
-        case FILE_BUTTON:
-          button.addSelectionListener( new FileSelectionButtonListener( textvar ) );
-          break;
-        case DIR_BUTTON:
-          button.addSelectionListener( new DirectorySelectionButtonListener( textvar ) );
-          break;
-        case TABLE_BUTTON:
-          button.addSelectionListener( new TableSelectionButtonListener( textvar ) );
-          break;
-      }
-    }
-
-    /**
-     * Gets the button.
-     *
-     * @return the button
-     */
-    public Control getButton() {
-      return button != null ? button : ( textvar != null ? textvar : label );
-    }
-
-    /**
-     * Gets the text var.
-     *
-     * @return the text var
-     */
-    public TextVar getTextVar() {
-      return textvar;
-    }
-
-    /**
-     * Sets the text.
-     *
-     * @param val the new text
-     */
-    public void setText( String val ) {
-      if ( type == NO_VAR ) {
-        text.setText( val );
-      } else {
-        textvar.setText( val );
-      }
-    }
-
-    /**
-     * Gets the text.
-     *
-     * @return the text
-     */
-    public String getText() {
-      return ( type == NO_VAR ) ? text.getText() : textvar.getText();
-    }
-
-    /**
-     * Sets the visible.
-     *
-     * @param b the new visible
-     */
-    public void setVisible( boolean b ) {
-      if ( button != null ) {
-        button.setVisible( b );
-      }
-      if ( label != null ) {
-        label.setVisible( b );
-      }
-      if ( textvar != null ) {
-        textvar.setVisible( b );
-      }
-    }
-
-  }
+  int margin = Const.MARGIN;
 
   /**
    * Instantiates a new tera data bulk loader dialog.
-   *
-   * @param parent the parent
-   * @param in the in
-   * @param transMeta the trans meta
-   * @param sname the sname
+   * 
+   * @param parent
+   *          the parent
+   * @param in
+   *          the in
+   * @param transMeta
+   *          the trans meta
+   * @param sname
+   *          the sname
    */
   public TeraDataBulkLoaderDialog( Shell parent, Object in, TransMeta transMeta, String sname ) {
     super( parent, (BaseStepMeta) in, transMeta, sname );
     input = (TeraDataBulkLoaderMeta) in;
-    inputFields = new HashMap<String, Integer>();
-    inputFieldType = new HashMap<String, Integer>();
-    inputFieldLength = new HashMap<String, Integer>();
   }
-
-  /** The ls table mod. */
-  ModifyListener lsTableMod = new ModifyListener() {
-    public void modifyText( ModifyEvent arg0 ) {
-      input.setChanged();
-      setTableFieldCombo();
-    }
-  };
 
   /** The ls mod. */
   ModifyListener lsMod = new ModifyListener() {
+    @Override
     public void modifyText( ModifyEvent e ) {
       input.setChanged();
     }
@@ -912,14 +170,18 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 
   /** The ls mod select. */
   Listener lsModSelect = new Listener() {
+    @Override
     public void handleEvent( Event e ) {
       input.setChanged();
     }
   };
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.pentaho.di.trans.step.StepDialogInterface#open()
    */
+  @Override
   public String open() {
     Shell parent = getParent();
     Display display = parent.getDisplay();
@@ -960,21 +222,26 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     wStepname.setLayoutData( fdStepname );
 
     // Connection line
-    wConnection = addConnectionLine( shell, wStepname, middle, margin );
+    Label wlConnection = new Label( shell, SWT.RIGHT );
+    wConnection =
+        addConnectionLine( shell, wStepname, middle, margin, wlConnection, new Button( shell, SWT.PUSH ), new Button(
+            shell, SWT.PUSH ), new Button( shell, SWT.PUSH ), null );
     if ( input.getDatabaseMeta() == null && transMeta.nrDatabases() == 1 ) {
       wConnection.select( 0 );
     }
     wConnection.addModifyListener( lsMod );
+    wlConnection.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Connection.Label" ) );
 
     // Generate or Use Script File
-    CompositeMenuItem wScriptOption =
-        new CompositeMenuItem( shell, wConnection, "TeraDataBulkLoaderDialog.ScriptOption.Label", 0 );
+    wScriptOption =
+        new CompositeMenuItem( props, lsMod, lsModSelect, input, shell, wConnection,
+            "TeraDataBulkLoaderDialog.ScriptOption.Label", 0 );
     cScriptOption =
         wScriptOption.addRadioComposite( TeraDataBulkLoader.ScriptTypes, SWT.NO_RADIO_GROUP, this, new Runnable() {
 
           @Override
           public void run() {
-            disableInputs();
+            createDynamicTabs();
           }
         } );
     // Composite groups and folder
@@ -984,258 +251,9 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     fItemSet = new CTabFolder( shell, SWT.BORDER );
     props.setLook( fItemSet, Props.WIDGET_STYLE_TAB );
 
-    tiExecutionItems = new CTabItem( fItemSet, SWT.NONE );
-
-    cExecutionItems = new Composite( fItemSet, SWT.BORDER );
-    cUseScriptItems = new Composite( fItemSet, SWT.BORDER );
-    cGenScriptControlItems = new Composite( fItemSet, SWT.BORDER );
-    cGenScriptFields = new Composite( fItemSet, SWT.BORDER );
-    cExecutionItems.setLayout( new FormLayout() );
-    cUseScriptItems.setLayout( new FormLayout() );
-    cGenScriptControlItems.setLayout( new FormLayout() );
-    cGenScriptFields.setLayout( new FormLayout() );
-
-    props.setLook( cGenScriptControlItems );
-    props.setLook( cGenScriptFields );
-    props.setLook( cUseScriptItems );
-    props.setLook( cExecutionItems );
-
-    tiExecutionItems.setControl( cExecutionItems );
-    /************************************************************/
-    tiGenScriptControlItems = new CTabItem( fItemSet, SWT.NONE );
-    tiGenScriptFields = new CTabItem( fItemSet, SWT.NONE );
-    tiGenScriptControlItems.setText( BaseMessages.getString( PKG,
-        "TeraDataBulkLoaderDialog.GenerateScriptControlTab.Label" ) );
-    tiGenScriptFields.setText( BaseMessages.getString( PKG,
-        "TeraDataBulkLoaderDialog.GenerateScriptFieldsTab.Label" ) );
-    tiGenScriptControlItems.setControl( cGenScriptControlItems );
-    tiGenScriptFields.setControl( cGenScriptFields );
-    tiUseScriptItems = new CTabItem( fItemSet, SWT.NONE );
-    tiUseScriptItems.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ScriptTab.Label" ) );
-    tiUseScriptItems.setControl( cUseScriptItems );
-    /************************************************************/
-
-    tiExecutionItems.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ExecutionTab.Label" ) );
-    fItemSet.setSelection( tiExecutionItems );
-
-    FormData fdExecutionItems = new FormData();
-    fdExecutionItems.left = new FormAttachment( 0, margin );
-    fdExecutionItems.top = new FormAttachment( wScriptOption.getComposite(), margin );
-    fdExecutionItems.right = new FormAttachment( 100, -margin );
-    cExecutionItems.setLayoutData( fdExecutionItems );
-
-    FormData fdScript = new FormData();
-    fdScript.left = new FormAttachment( 0, margin );
-    fdScript.top = new FormAttachment( cExecutionItems, margin );
-    fdScript.right = new FormAttachment( 100, -margin );
-    fdScript.bottom = new FormAttachment( 100, -margin );
-    cUseScriptItems.setLayoutData( fdScript );
-
     /******************************************************************************************************************/
     /*************** cCommonItems - Common items Composite Group ******************************************************/
     /******************************************************************************************************************/
-
-    /******************************************************************************************************************/
-    /*************** cExecutionItems -- Execution Environment Composite Group *****************************************/
-    /******************************************************************************************************************/
-    wTdInstall =
-        new TextVarMenuItem( cExecutionItems, (Control) null, "TeraDataBulkLoaderDialog.TdInstall.Label", DIR_BUTTON );
-    wTwbRoot = new TextVarMenuItem( cExecutionItems, wTdInstall, "TeraDataBulkLoaderDialog.TwbRoot.Label", DIR_BUTTON );
-    wLibPath = new TextVarMenuItem( cExecutionItems, wTwbRoot, "TeraDataBulkLoaderDialog.TDLibPath.Label", DIR_BUTTON );
-    wTbuildLibPath =
-        new TextVarMenuItem( cExecutionItems, wLibPath, "TeraDataBulkLoaderDialog.TbuildLibPath.Label", DIR_BUTTON );
-    wTdicuLibPath =
-        new TextVarMenuItem( cExecutionItems, wTbuildLibPath,
-            "TeraDataBulkLoaderDialog.TdicuLibPath.Label", DIR_BUTTON );
-    wCopLibPath =
-        new TextVarMenuItem( cExecutionItems, wTdicuLibPath, "TeraDataBulkLoaderDialog.CopLibPath.Label", DIR_BUTTON );
-    wTbuildPath =
-        new TextVarMenuItem( cExecutionItems, wCopLibPath, "TeraDataBulkLoaderDialog.TbuildPath.Label", FILE_BUTTON );
-    wDataFile =
-        new TextVarMenuItem( cExecutionItems, wTbuildPath, "TeraDataBulkLoaderDialog.DataFile.Label", NO_BUTTON );
-    wJobName = new TextVarMenuItem( cExecutionItems, wDataFile, "TeraDataBulkLoaderDialog.JobName.Label", NO_BUTTON );
-
-    /**************************** these in the control tab *****************************************/
-    cGenScriptControlItemsDisableMsg =
-        new TextVarMenuItem( cGenScriptControlItems, (Control) null,
-            "TeraDataBulkLoaderDialog.GenScriptControlItemsDisable.Label", LABEL_ONLY | NO_BUTTON );
-    wSchema =
-        new TextVarMenuItem( cGenScriptControlItems, cGenScriptControlItemsDisableMsg,
-            "TeraDataBulkLoaderDialog.TargetSchema.Label", NO_BUTTON );
-    wSchema.getTextVar().addModifyListener( lsTableMod );
-    wTable =
-        new TextVarMenuItem( cGenScriptControlItems, wSchema, "TeraDataBulkLoaderDialog.TargetTable.Label",
-            TABLE_BUTTON );
-    wTable.getTextVar().addModifyListener( lsTableMod );
-    wLogTable =
-        new TextVarMenuItem( cGenScriptControlItems, wTable, "TeraDataBulkLoaderDialog.LogTable.Label", NO_BUTTON );
-    wWorkTable =
-        new TextVarMenuItem( cGenScriptControlItems, wLogTable, "TeraDataBulkLoaderDialog.WorkTable.Label", NO_BUTTON );
-    wErrorTable =
-        new TextVarMenuItem( cGenScriptControlItems, wWorkTable,
-            "TeraDataBulkLoaderDialog.ErrorTable.Label", NO_BUTTON );
-    wErrorTable2 =
-        new TextVarMenuItem( cGenScriptControlItems, wErrorTable, "TeraDataBulkLoaderDialog.ErrorTable2.Label",
-            NO_BUTTON );
-
-    CompositeMenuItem wDropTables =
-        new CompositeMenuItem( cGenScriptControlItems, wErrorTable2, "TeraDataBulkLoaderDialog.DropTables.Label",
-            SWT.BORDER );
-    wbDropLog = wDropTables.addButton( "TeraDataBulkLoaderDialog.LogTable.Label", SWT.CHECK );
-    wbDropWork = wDropTables.addButton( "TeraDataBulkLoaderDialog.WorkTable.Label", SWT.CHECK );
-    wbDropError = wDropTables.addButton( "TeraDataBulkLoaderDialog.ErrorTable.Label", SWT.CHECK );
-    wbDropError2 = wDropTables.addButton( "TeraDataBulkLoaderDialog.ErrorTable2.Label", SWT.CHECK );
-
-    CompositeMenuItem wRowHandling =
-        new CompositeMenuItem( cGenScriptControlItems, wDropTables.getComposite(),
-            "TeraDataBulkLoaderDialog.RowHandling.Label", SWT.BORDER );
-    wbIgnoreDupUpdate = wRowHandling.addButton( "TeraDataBulkLoaderDialog.IgnoreDupUpdate.Label", SWT.CHECK );
-    wbInsertMissingUpdate = wRowHandling.addButton( "TeraDataBulkLoaderDialog.InsertMissingUpdate.Label", SWT.CHECK );
-    wbIgnoreMissingUpdate = wRowHandling.addButton( "TeraDataBulkLoaderDialog.IgnoreMissing.Label", SWT.CHECK );
-
-    wAccessLogFile =
-        new TextVarMenuItem( cGenScriptControlItems, wRowHandling, "TeraDataBulkLoaderDialog.AccessLogFile.Label",
-            FILE_BUTTON );
-    wUpdateLogFile =
-        new TextVarMenuItem( cGenScriptControlItems, wAccessLogFile, "TeraDataBulkLoaderDialog.UpdateLogFile.Label",
-            FILE_BUTTON );
-    wScriptFile =
-        new TextVarMenuItem( cGenScriptControlItems, wUpdateLogFile, "TeraDataBulkLoaderDialog.ScriptFile.Label",
-            NO_BUTTON );
-
-    /**************************** these in the fields tab *****************************************/
-    cGenScriptFieldsDisableMsg =
-        new TextVarMenuItem( cGenScriptFields, (Control) null, "TeraDataBulkLoaderDialog.GenScriptFieldsDisable.Label",
-            LABEL_ONLY | NO_BUTTON );
-    CompositeMenuItem wActionType =
-        new CompositeMenuItem( cGenScriptFields, cGenScriptFieldsDisableMsg,
-            "TeraDataBulkLoaderDialog.ActionType.Label", 0 );
-    cActionType =
-        wActionType.addRadioComposite( TeraDataBulkLoader.ActionTypes, SWT.NO_RADIO_GROUP, this, new Runnable() {
-
-          @Override
-          public void run() {
-            disableKeytable();
-          }
-        } );
-
-    // Key table
-    int nrKeyCols = 3;
-    int nrKeyRows =
-        ( ( input.getKeyStream() != null ) && ( input.getKeyStream().length > 3 ) ? input.getKeyStream().length : 3 );
-
-    wlKey = new Label( cGenScriptFields, SWT.NONE );
-    wlKey.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Keys.Label" ) );
-    props.setLook( wlKey );
-    FormData fdlKey = new FormData();
-    fdlKey.left = new FormAttachment( 0, 0 );
-    fdlKey.top = new FormAttachment( wActionType.getComposite(), margin );
-    wlKey.setLayoutData( fdlKey );
-
-    ciKey = new ColumnInfo[nrKeyCols];
-    ciKey[0] =
-        new ColumnInfo( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ColumnInfo.TableField" ),
-            ColumnInfo.COLUMN_TYPE_CCOMBO, new String[] { "" }, false );
-    ciKey[1] =
-        new ColumnInfo(
-            BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ColumnInfo.Comparator" ), ColumnInfo.COLUMN_TYPE_CCOMBO, new String[] { "=", "= ~NULL", "<>", "<", "<=", //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-              ">", ">=", "LIKE", "IS NULL", "IS NOT NULL" } ); //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-    ciKey[2] =
-        new ColumnInfo( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ColumnInfo.StreamField" ),
-            ColumnInfo.COLUMN_TYPE_CCOMBO, new String[] { "" }, false );
-    tableFieldColumns.add( ciKey[0] );
-    wKey =
-        new TableView( transMeta, cGenScriptFields, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.V_SCROLL
-            | SWT.H_SCROLL, ciKey, nrKeyRows, lsMod, props );
-
-    wGet = new Button( cGenScriptFields, SWT.PUSH );
-    wGet.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.GetFields.Button" ) );
-    fdGet = new FormData();
-    fdGet.right = new FormAttachment( 100, 0 );
-    fdGet.top = new FormAttachment( wlKey, margin );
-    wGet.setLayoutData( fdGet );
-
-    FormData fdKey = new FormData();
-    fdKey.left = new FormAttachment( 0, 0 );
-    fdKey.top = new FormAttachment( wlKey, margin );
-    fdKey.right = new FormAttachment( wGet, -margin );
-    // fdKey.bottom = new FormAttachment(wlKey, 190);
-    wKey.setLayoutData( fdKey );
-
-    // The field Table
-    wlReturn = new Label( cGenScriptFields, SWT.NONE );
-    wlReturn.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Fields.Label" ) );
-    props.setLook( wlReturn );
-    fdlReturn = new FormData();
-    fdlReturn.left = new FormAttachment( 0, 0 );
-    fdlReturn.top = new FormAttachment( wKey, margin );
-    wlReturn.setLayoutData( fdlReturn );
-
-    int UpInsCols = 3;
-    int UpInsRows = ( input.getFieldTable() != null ? input.getFieldTable().length : 1 );
-
-    ciReturn = new ColumnInfo[UpInsCols];
-    ciReturn[0] =
-        new ColumnInfo( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ColumnInfo.TableField" ),
-            ColumnInfo.COLUMN_TYPE_CCOMBO, new String[] { "" }, false );
-    ciReturn[1] =
-        new ColumnInfo( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ColumnInfo.StreamField" ),
-            ColumnInfo.COLUMN_TYPE_CCOMBO, new String[] { "" }, false );
-    ciReturn[2] =
-        new ColumnInfo( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ColumnInfo.UpdateField" ),
-            ColumnInfo.COLUMN_TYPE_CCOMBO, new String[] { "Y", "N" } );
-
-    tableFieldColumns.add( ciReturn[0] );
-    wReturn =
-        new TableView( transMeta, cGenScriptFields, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.V_SCROLL
-            | SWT.H_SCROLL, ciReturn, UpInsRows, lsMod, props );
-
-    wGetMapping = new Button( cGenScriptFields, SWT.PUSH );
-    wGetMapping.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.GetFields.Label" ) );
-    fdGetLU = new FormData();
-    fdGetLU.top = new FormAttachment( wlReturn, margin );
-    fdGetLU.right = new FormAttachment( 100, 0 );
-    wGetMapping.setLayoutData( fdGetLU );
-
-    wDoMapping = new Button( cGenScriptFields, SWT.PUSH );
-    wDoMapping.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.EditMapping.Label" ) );
-    fdDoMapping = new FormData();
-    fdDoMapping.top = new FormAttachment( wGetMapping, margin );
-    fdDoMapping.right = new FormAttachment( 100, 0 );
-    wDoMapping.setLayoutData( fdDoMapping );
-    wDoMapping.addListener( SWT.Selection, new Listener() {
-      public void handleEvent( Event arg0 ) {
-        generateMappings();
-      }
-    } );
-
-    fdReturn = new FormData();
-    fdReturn.left = new FormAttachment( 0, 0 );
-    fdReturn.top = new FormAttachment( wlReturn, margin );
-    fdReturn.right = new FormAttachment( wGetMapping, -margin );
-    fdReturn.bottom = new FormAttachment( 100, 0 );
-    wReturn.setLayoutData( fdReturn );
-    /******************************************************************************************************************/
-    /********************************************************* Use Script Options Group *******************************/
-    /******************************************************************************************************************/
-
-    cUseScriptItemsDisableMsg =
-        new TextVarMenuItem( cUseScriptItems, (Control) null, "TeraDataBulkLoaderDialog.ControlFileDisable.Label",
-            LABEL_ONLY | NO_BUTTON );
-    wControlFile =
-        new TextVarMenuItem( cUseScriptItems, cUseScriptItemsDisableMsg, "TeraDataBulkLoaderDialog.ControlFile.Label",
-            FILE_BUTTON );
-
-    CompositeMenuItem wSubstituteControlFile =
-        new CompositeMenuItem( cUseScriptItems, wControlFile,
-            "TeraDataBulkLoaderDialog.SubstituteControlFile.Label", 0 );
-    wbSubstituteControlFile = wSubstituteControlFile.addButton( "", SWT.CHECK );
-
-    wVariableFile =
-        new TextVarMenuItem( cUseScriptItems, wSubstituteControlFile, "TeraDataBulkLoaderDialog.VariableFile.Label",
-            FILE_BUTTON );
-
-    /***************************************************/
 
     // THE BUTTONS
     wOK = new Button( shell, SWT.PUSH );
@@ -1256,69 +274,32 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     fItemSet.setLayoutData( fdItemSet );
     props.setLook( fItemSet );
 
-    //
-    // Search the fields in the background
-    //
-
-    final Runnable runnable = new Runnable() {
-      public void run() {
-        StepMeta stepMeta = transMeta.findStep( stepname );
-        if ( stepMeta != null ) {
-          try {
-            RowMetaInterface row = transMeta.getPrevStepFields( stepMeta );
-
-            // Remember these fields...
-            for ( int i = 0; i < row.size(); i++ ) {
-              inputFields.put( row.getValueMeta( i ).getName(), Integer.valueOf( i ) );
-              inputFieldType.put( row.getValueMeta( i ).getName(), row.getValueMeta( i ).getType() );
-              inputFieldLength.put( row.getValueMeta( i ).getName(), row.getValueMeta( i ).getLength() );
-            }
-
-            setComboBoxes();
-          } catch ( KettleException e ) {
-            logError( BaseMessages.getString( PKG, "System.Dialog.GetFieldsFailed.Message" ) );
-          }
-        }
-      }
-    };
-    new Thread( runnable ).start();
-
-    // Add listeners
-    lsGet = new Listener() {
-      public void handleEvent( Event e ) {
-        get();
-      }
-    };
-
     lsOK = new Listener() {
+      @Override
       public void handleEvent( Event e ) {
         ok();
       }
     };
-    lsGetLU = new Listener() {
-      public void handleEvent( Event e ) {
-        getUpdate();
-      }
-    };
 
     lsCancel = new Listener() {
+      @Override
       public void handleEvent( Event e ) {
         cancel();
       }
     };
 
     lsPreview = new Listener() {
+      @Override
       public void handleEvent( Event e ) {
         previewScript();
       }
     };
 
     wOK.addListener( SWT.Selection, lsOK );
-    wGetMapping.addListener( SWT.Selection, lsGetLU );
-    wGet.addListener( SWT.Selection, lsGet );
     wCancel.addListener( SWT.Selection, lsCancel );
     wPreviewScript.addListener( SWT.Selection, lsPreview );
     lsDef = new SelectionAdapter() {
+      @Override
       public void widgetDefaultSelected( SelectionEvent e ) {
         ok();
       }
@@ -1328,6 +309,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 
     // Detect X or ALT-F4 or something that kills this window...
     shell.addShellListener( new ShellAdapter() {
+      @Override
       public void shellClosed( ShellEvent e ) {
         cancel();
       }
@@ -1335,13 +317,8 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 
     // Set the shell size, based upon previous time...
     setSize();
-
     getData();
-    setTableFieldCombo();
     input.setChanged( changed );
-
-    disableInputs();
-    disableKeytable();
     shell.open();
 
     while ( !shell.isDisposed() ) {
@@ -1352,11 +329,693 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     return stepname;
   }
 
+  private InputFields getInputFields() {
+    Map<String, Integer> inputFieldLength = new HashMap<String, Integer>();
+    Map<String, Integer> inputFields = new HashMap<String, Integer>();
+    Map<String, Integer> inputFieldType = new HashMap<String, Integer>();
+
+    StepMeta stepMeta = transMeta.findStep( stepname );
+    if ( stepMeta != null ) {
+      try {
+        RowMetaInterface row = transMeta.getPrevStepFields( stepMeta );
+
+        // Remember these fields...
+        for ( int i = 0; i < row.size(); i++ ) {
+          ValueMetaInterface valueMetaInterface = row.getValueMeta( i );
+          inputFields.put( valueMetaInterface.getName(), Integer.valueOf( i ) );
+          inputFieldType.put( valueMetaInterface.getName(), valueMetaInterface.getType() );
+          inputFieldLength.put( valueMetaInterface.getName(), valueMetaInterface.getLength() );
+        }
+      } catch ( KettleException e ) {
+        logError( BaseMessages.getString( PKG, "System.Dialog.GetFieldsFailed.Message" ) );
+      }
+    }
+    return new InputFields( inputFields, inputFieldType, inputFieldLength );
+  }
+
+  private CTabItem createExecutionTab() {
+    CTabItem tiExecutionItems = new CTabItem( fItemSet, SWT.NONE );
+    Composite cExecutionItems = new Composite( fItemSet, SWT.BORDER );
+    props.setLook( cExecutionItems );
+    tiExecutionItems.setControl( cExecutionItems );
+    tiExecutionItems.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ExecutionTab.Label" ) );
+    /******************************************************************************************************************/
+    /*************** cExecutionItems -- Execution Environment Composite Group *****************************************/
+    /******************************************************************************************************************/
+    Group locationsGroup = new Group( cExecutionItems, SWT.SHADOW_NONE );
+    props.setLook( locationsGroup );
+    locationsGroup.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.LocationGroup.Label" ) );
+    FormLayout locationsGroupLayout = new FormLayout();
+    locationsGroupLayout.marginWidth = 10;
+    locationsGroupLayout.marginHeight = 10;
+    locationsGroup.setLayout( locationsGroupLayout );
+    FormData locationsData = new FormData();
+    locationsData.left = new FormAttachment( 0, margin );
+    locationsData.top = new FormAttachment( 0, 2 * margin );
+    locationsData.right = new FormAttachment( 100, -margin );
+    locationsGroup.setLayoutData( locationsData );
+
+    final TextVarMenuItem wTdInstall =
+        new DirectoryTextVarMenuItem( shell, locationsGroup, props, transMeta, lsMod, (Control) null,
+            "TeraDataBulkLoaderDialog.TdInstall.Label" );
+    final TextVarMenuItem wTwbRoot =
+        new DirectoryTextVarMenuItem( shell, locationsGroup, props, transMeta, lsMod, wTdInstall,
+            "TeraDataBulkLoaderDialog.TwbRoot.Label" );
+    final TextVarMenuItem wLibPath =
+        new DirectoryTextVarMenuItem( shell, locationsGroup, props, transMeta, lsMod, wTwbRoot,
+            "TeraDataBulkLoaderDialog.TDLibPath.Label" );
+    final TextVarMenuItem wTbuildLibPath =
+        new DirectoryTextVarMenuItem( shell, locationsGroup, props, transMeta, lsMod, wLibPath,
+            "TeraDataBulkLoaderDialog.TbuildLibPath.Label" );
+    final TextVarMenuItem wTdicuLibPath =
+        new DirectoryTextVarMenuItem( shell, locationsGroup, props, transMeta, lsMod, wTbuildLibPath,
+            "TeraDataBulkLoaderDialog.TdicuLibPath.Label" );
+    final TextVarMenuItem wCopLibPath =
+        new DirectoryTextVarMenuItem( shell, locationsGroup, props, transMeta, lsMod, wTdicuLibPath,
+            "TeraDataBulkLoaderDialog.CopLibPath.Label" );
+    final TextVarMenuItem wTbuildPath =
+        new FileTextVarMenuItem( shell, locationsGroup, props, transMeta, lsMod, wCopLibPath,
+            "TeraDataBulkLoaderDialog.TbuildPath.Label" );
+
+    Group otherGroup = new Group( cExecutionItems, SWT.SHADOW_NONE );
+    props.setLook( otherGroup );
+    otherGroup.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.OtherGroup.Label" ) );
+    FormLayout otherGroupLayout = new FormLayout();
+    otherGroupLayout.marginWidth = 10;
+    otherGroupLayout.marginHeight = 10;
+    otherGroup.setLayout( otherGroupLayout );
+
+    FormData otherData = new FormData();
+    otherData.top = new FormAttachment( locationsGroup, margin );
+    otherData.left = new FormAttachment( 0, margin );
+    otherData.right = new FormAttachment( 100, -margin );
+    otherData.bottom = new FormAttachment( 100, -margin );
+    otherGroup.setLayoutData( otherData );
+
+    final TextVarMenuItem wDataFile =
+        new NoButtonTextVarMenuItem( otherGroup, props, transMeta, lsMod, wTbuildPath,
+            "TeraDataBulkLoaderDialog.DataFile.Label" );
+    final TextVarMenuItem wJobName =
+        new NoButtonTextVarMenuItem( otherGroup, props, transMeta, lsMod, wDataFile,
+            "TeraDataBulkLoaderDialog.JobName.Label" );
+
+    cExecutionItems.setLayout( new FormLayout() );
+    FormData fdExecutionItems = new FormData();
+    fdExecutionItems.left = new FormAttachment( 0, margin );
+    fdExecutionItems.top = new FormAttachment( wScriptOption.getComposite(), margin );
+    fdExecutionItems.right = new FormAttachment( 100, -margin );
+    cExecutionItems.setLayoutData( fdExecutionItems );
+    dialogPopulators.add( new DialogPopulator() {
+
+      @Override
+      public void validate( List<String> errors ) {
+        addIfVoid( errors, Const.isEmpty( wTdInstall.getText() ),
+            "TeraDataBulkLoaderDialog.MissingInstallPath.DialogMessage" );
+      }
+
+      @Override
+      public void populateMeta( TeraDataBulkLoaderMeta inf ) {
+        inf.setTdInstallPath( wTdInstall.getText() );
+        inf.setTwbRoot( wTwbRoot.getText() );
+        inf.setLibPath( wLibPath.getText() );
+        inf.setTbuildLibPath( wTbuildLibPath.getText() );
+        inf.setTdicuLibPath( wTdicuLibPath.getText() );
+        inf.setCopLibPath( wCopLibPath.getText() );
+        inf.setTbuildPath( wTbuildPath.getText() );
+        inf.setFifoFileName( wDataFile.getText() );
+        inf.setJobName( wJobName.getText() );
+      }
+
+      @Override
+      public void populateDialog( TeraDataBulkLoaderMeta input ) {
+        String val;
+        if ( ( val = input.getTdInstallPath() ) != null ) {
+          wTdInstall.setText( val );
+        }
+        if ( ( val = input.getTwbRoot() ) != null ) {
+          wTwbRoot.setText( val );
+        }
+        if ( ( val = input.getLibPath() ) != null ) {
+          wLibPath.setText( val );
+        }
+        if ( ( val = input.getTbuildLibPath() ) != null ) {
+          wTbuildLibPath.setText( val );
+        }
+        if ( ( val = input.getTdicuLibPath() ) != null ) {
+          wTdicuLibPath.setText( val );
+        }
+        if ( ( val = input.getCopLibPath() ) != null ) {
+          wCopLibPath.setText( val );
+        }
+        if ( ( val = input.getTbuildPath() ) != null ) {
+          wTbuildPath.setText( val );
+        }
+        if ( ( val = input.getFifoFileName() ) != null ) {
+          wDataFile.setText( val );
+        }
+        if ( ( val = input.getJobName() ) != null ) {
+          wJobName.setText( val );
+        }
+      }
+    } );
+    return tiExecutionItems;
+  }
+
+  private void createGenScriptTabs() {
+    CTabItem tiGenScriptControlItems = new CTabItem( fItemSet, SWT.NONE );
+    tiGenScriptControlItems.setText( BaseMessages.getString( PKG,
+        "TeraDataBulkLoaderDialog.GenerateScriptControlTab.Label" ) );
+    final Composite cGenScriptControlItems = new Composite( fItemSet, SWT.BORDER );
+    props.setLook( cGenScriptControlItems );
+    /**************************** these in the control tab *****************************************/
+    final TextVarMenuItem wSchema =
+        new NoButtonTextVarMenuItem( cGenScriptControlItems, props, transMeta, lsMod, (Control) null,
+            "TeraDataBulkLoaderDialog.TargetSchema.Label" );
+    final TextVarMenuItem wTable =
+        new TableTextVarMenuItem( shell, cGenScriptControlItems, props, transMeta, lsMod, wSchema,
+            "TeraDataBulkLoaderDialog.TargetTable.Label" );
+    final Runnable setTableFieldCombo = new Runnable() {
+
+      @Override
+      public void run() {
+        setTableFieldCombo( wSchema, wTable );
+      }
+    };
+    ModifyListener lsTableMod = new ModifyListener() {
+      @Override
+      public void modifyText( ModifyEvent arg0 ) {
+        input.setChanged();
+        setTableFieldCombo.run();
+      }
+    };
+    wSchema.getTextVar().addModifyListener( lsTableMod );
+    ( (Button) wTable.getButton() ).addSelectionListener( new TableSelectionButtonListener( transMeta, wTable
+        .getTextVar(), wConnection, shell, wSchema, wTable, setTableFieldCombo, log ) );
+    wTable.getTextVar().addModifyListener( lsTableMod );
+    final TextVarMenuItem wLogTable =
+        new NoButtonTextVarMenuItem( cGenScriptControlItems, props, transMeta, lsMod, wTable,
+            "TeraDataBulkLoaderDialog.LogTable.Label" );
+    final TextVarMenuItem wWorkTable =
+        new NoButtonTextVarMenuItem( cGenScriptControlItems, props, transMeta, lsMod, wLogTable,
+            "TeraDataBulkLoaderDialog.WorkTable.Label" );
+    final TextVarMenuItem wErrorTable =
+        new NoButtonTextVarMenuItem( cGenScriptControlItems, props, transMeta, lsMod, wWorkTable,
+            "TeraDataBulkLoaderDialog.ErrorTable.Label" );
+    final TextVarMenuItem wErrorTable2 =
+        new NoButtonTextVarMenuItem( cGenScriptControlItems, props, transMeta, lsMod, wErrorTable,
+            "TeraDataBulkLoaderDialog.ErrorTable2.Label" );
+
+    CompositeMenuItem wDropTables =
+        new CompositeMenuItem( props, lsMod, lsModSelect, input, cGenScriptControlItems, wErrorTable2,
+            "TeraDataBulkLoaderDialog.DropTables.Label", SWT.BORDER );
+    final Button wbDropLog = wDropTables.addButton( "TeraDataBulkLoaderDialog.LogTable.Label", SWT.CHECK );
+    final Button wbDropWork = wDropTables.addButton( "TeraDataBulkLoaderDialog.WorkTable.Label", SWT.CHECK );
+    final Button wbDropError = wDropTables.addButton( "TeraDataBulkLoaderDialog.ErrorTable.Label", SWT.CHECK );
+    final Button wbDropError2 = wDropTables.addButton( "TeraDataBulkLoaderDialog.ErrorTable2.Label", SWT.CHECK );
+
+    CompositeMenuItem wRowHandling =
+        new CompositeMenuItem( props, lsMod, lsModSelect, input, cGenScriptControlItems, wDropTables.getComposite(),
+            "TeraDataBulkLoaderDialog.RowHandling.Label", SWT.BORDER );
+    final Button wbIgnoreDupUpdate =
+        wRowHandling.addButton( "TeraDataBulkLoaderDialog.IgnoreDupUpdate.Label", SWT.CHECK );
+    final Button wbInsertMissingUpdate =
+        wRowHandling.addButton( "TeraDataBulkLoaderDialog.InsertMissingUpdate.Label", SWT.CHECK );
+    final Button wbIgnoreMissingUpdate =
+        wRowHandling.addButton( "TeraDataBulkLoaderDialog.IgnoreMissing.Label", SWT.CHECK );
+
+    final TextVarMenuItem wAccessLogFile =
+        new FileTextVarMenuItem( shell, cGenScriptControlItems, props, transMeta, lsMod, wRowHandling,
+            "TeraDataBulkLoaderDialog.AccessLogFile.Label" );
+    final TextVarMenuItem wUpdateLogFile =
+        new FileTextVarMenuItem( shell, cGenScriptControlItems, props, transMeta, lsMod, wAccessLogFile,
+            "TeraDataBulkLoaderDialog.UpdateLogFile.Label" );
+    final TextVarMenuItem wScriptFile =
+        new NoButtonTextVarMenuItem( cGenScriptControlItems, props, transMeta, lsMod, wUpdateLogFile,
+            "TeraDataBulkLoaderDialog.ScriptFile.Label" );
+    tiGenScriptControlItems.setControl( cGenScriptControlItems );
+    cGenScriptControlItems.setLayout( new FormLayout() );
+    dialogPopulators.add( new DialogPopulator() {
+
+      @Override
+      public void validate( List<String> errors ) {
+        addIfVoid( errors, Const.isEmpty( wSchema.getText() ), "TeraDataBulkLoaderDialog.MissingSchema.DialogMessage" );
+        addIfVoid( errors, Const.isEmpty( wTable.getText() ),
+            "TeraDataBulkLoaderDialog.MissingTargetTable.DialogMessage" );
+        addIfVoid( errors, Const.isEmpty( wLogTable.getText() ),
+            "TeraDataBulkLoaderDialog.MissingLogTable.DialogMessage" );
+      }
+
+      @Override
+      public void populateMeta( TeraDataBulkLoaderMeta inf ) {
+        inf.setSchemaName( wSchema.getText() );
+        inf.setTableName( wTable.getText() );
+        inf.setLogTable( wLogTable.getText() );
+        inf.setWorkTable( wWorkTable.getText() );
+        inf.setErrorTable( wErrorTable.getText() );
+        inf.setErrorTable2( wErrorTable2.getText() );
+        inf.setDropLogTable( wbDropLog.getSelection() );
+        inf.setDropWorkTable( wbDropWork.getSelection() );
+        inf.setDropErrorTable( wbDropError.getSelection() );
+        inf.setDropErrorTable2( wbDropError2.getSelection() );
+        inf.setIgnoreDupUpdate( wbIgnoreDupUpdate.getSelection() );
+        inf.setInsertMissingUpdate( wbInsertMissingUpdate.getSelection() );
+        inf.setIgnoreMissingUpdate( wbIgnoreMissingUpdate.getSelection() );
+        inf.setAccessLogFile( wAccessLogFile.getText() );
+        inf.setUpdateLogFile( wUpdateLogFile.getText() );
+        inf.setScriptFileName( wScriptFile.getText() );
+      }
+
+      @Override
+      public void populateDialog( TeraDataBulkLoaderMeta input ) {
+        String val;
+        Boolean bval;
+        if ( ( val = input.getSchemaName() ) != null ) {
+          wSchema.setText( val );
+        }
+        if ( ( val = input.getTableName() ) != null ) {
+          wTable.setText( val );
+        }
+        if ( ( val = input.getLogTable() ) != null ) {
+          wLogTable.setText( val );
+        }
+        if ( ( val = input.getWorkTable() ) != null ) {
+          wWorkTable.setText( val );
+        }
+        if ( ( val = input.getErrorTable() ) != null ) {
+          wErrorTable.setText( val );
+        }
+        if ( ( val = input.getErrorTable2() ) != null ) {
+          wErrorTable2.setText( val );
+        }
+        if ( ( bval = input.getDropLogTable() ) != null ) {
+          wbDropLog.setSelection( bval );
+        }
+        if ( ( bval = input.getDropWorkTable() ) != null ) {
+          wbDropWork.setSelection( bval );
+        }
+        if ( ( bval = input.getDropErrorTable() ) != null ) {
+          wbDropError.setSelection( bval );
+        }
+        if ( ( bval = input.getDropErrorTable2() ) != null ) {
+          wbDropError2.setSelection( bval );
+        }
+        if ( ( bval = input.getIgnoreDupUpdate() ) != null ) {
+          wbIgnoreDupUpdate.setSelection( bval );
+        }
+        if ( ( bval = input.getInsertMissingUpdate() ) != null ) {
+          wbInsertMissingUpdate.setSelection( bval );
+        }
+        if ( ( bval = input.getIgnoreMissingUpdate() ) != null ) {
+          wbIgnoreMissingUpdate.setSelection( bval );
+        }
+        if ( ( val = input.getAccessLogFile() ) != null ) {
+          wAccessLogFile.setText( val );
+        }
+        if ( ( val = input.getUpdateLogFile() ) != null ) {
+          wUpdateLogFile.setText( val );
+        }
+        if ( ( val = input.getScriptFileName() ) != null ) {
+          wScriptFile.setText( val );
+        }
+      }
+    } );
+
+    tableFieldColumns.clear();
+    CTabItem tiGenScriptFields = new CTabItem( fItemSet, SWT.NONE );
+    tiGenScriptFields.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.GenerateScriptFieldsTab.Label" ) );
+    Composite cGenScriptFields = new Composite( fItemSet, SWT.BORDER );
+    props.setLook( cGenScriptFields );
+
+    /**************************** these in the fields tab *****************************************/
+    CompositeMenuItem wActionType =
+        new CompositeMenuItem( props, lsMod, lsModSelect, input, cGenScriptFields, (Control) null,
+            "TeraDataBulkLoaderDialog.ActionType.Label", 0 );
+
+    final RadioComposite cActionType =
+        wActionType.addRadioComposite( TeraDataBulkLoader.ActionTypes, SWT.NO_RADIO_GROUP, this, null );
+    // Key table
+    int nrKeyCols = 3;
+    int nrKeyRows =
+        ( ( input.getKeyStream() != null ) && ( input.getKeyStream().length > 3 ) ? input.getKeyStream().length : 3 );
+
+    final Label wlKey = new Label( cGenScriptFields, SWT.NONE );
+    wlKey.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Keys.Label" ) );
+    props.setLook( wlKey );
+    FormData fdlKey = new FormData();
+    fdlKey.left = new FormAttachment( 0, 0 );
+    fdlKey.top = new FormAttachment( wActionType.getComposite(), margin );
+    wlKey.setLayoutData( fdlKey );
+
+    final ColumnInfo[] ciKey = new ColumnInfo[nrKeyCols];
+    ciKey[0] =
+        new ColumnInfo( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ColumnInfo.TableField" ),
+            ColumnInfo.COLUMN_TYPE_CCOMBO, new String[] { "" }, false );
+    ciKey[1] =
+        new ColumnInfo(
+            BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ColumnInfo.Comparator" ), ColumnInfo.COLUMN_TYPE_CCOMBO, new String[] { "=", "= ~NULL", "<>", "<", "<=", //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+              ">", ">=", "LIKE", "IS NULL", "IS NOT NULL" } ); //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+    ciKey[2] =
+        new ColumnInfo( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ColumnInfo.StreamField" ),
+            ColumnInfo.COLUMN_TYPE_CCOMBO, new String[] { "" }, false );
+    tableFieldColumns.add( ciKey[0] );
+    final TableView wKey =
+        new TableView( transMeta, cGenScriptFields, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.V_SCROLL
+            | SWT.H_SCROLL, ciKey, nrKeyRows, lsMod, props );
+
+    final Button wGet = new Button( cGenScriptFields, SWT.PUSH );
+    wGet.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.GetFields.Button" ) );
+    wGet.addListener( SWT.Selection, new Listener() {
+      @Override
+      public void handleEvent( Event e ) {
+        try {
+          RowMetaInterface r = transMeta.getPrevStepFields( stepname );
+          if ( r != null ) {
+            TableItemInsertListener listener = new TableItemInsertListener() {
+              @Override
+              public boolean tableItemInserted( TableItem tableItem, ValueMetaInterface v ) {
+                tableItem.setText( 2, "=" );
+                return true;
+              }
+            };
+            BaseStepDialog.getFieldsFromPrevious( r, wKey, 1, new int[] { 1, 3 }, new int[] {}, -1, -1, listener );
+          }
+        } catch ( KettleException ke ) {
+          new ErrorDialog( shell, BaseMessages.getString( PKG, "InsertUpdateDialog.FailedToGetFields.DialogTitle" ),
+              BaseMessages.getString( PKG, "InsertUpdateDialog.FailedToGetFields.DialogMessage" ), ke );
+        }
+      }
+    } );
+
+    FormData fdGet = new FormData();
+    fdGet.right = new FormAttachment( 100, 0 );
+    fdGet.top = new FormAttachment( wlKey, margin );
+    wGet.setLayoutData( fdGet );
+
+    FormData fdKey = new FormData();
+    fdKey.left = new FormAttachment( 0, 0 );
+    fdKey.top = new FormAttachment( wlKey, margin );
+    fdKey.right = new FormAttachment( wGet, -margin );
+    // fdKey.bottom = new FormAttachment(wlKey, 190);
+    wKey.setLayoutData( fdKey );
+
+    // The field Table
+    Label wlReturn = new Label( cGenScriptFields, SWT.NONE );
+    wlReturn.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Fields.Label" ) );
+    props.setLook( wlReturn );
+    FormData fdlReturn = new FormData();
+    fdlReturn.left = new FormAttachment( 0, 0 );
+    fdlReturn.top = new FormAttachment( wKey, margin );
+    wlReturn.setLayoutData( fdlReturn );
+
+    int UpInsCols = 3;
+    int UpInsRows = ( input.getFieldTable() != null ? input.getFieldTable().length : 1 );
+
+    ColumnInfo[] ciReturn = new ColumnInfo[UpInsCols];
+    ciReturn[0] =
+        new ColumnInfo( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ColumnInfo.TableField" ),
+            ColumnInfo.COLUMN_TYPE_CCOMBO, new String[] { "" }, false );
+    ciReturn[1] =
+        new ColumnInfo( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ColumnInfo.StreamField" ),
+            ColumnInfo.COLUMN_TYPE_CCOMBO, new String[] { "" }, false );
+    ciReturn[2] =
+        new ColumnInfo( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ColumnInfo.UpdateField" ),
+            ColumnInfo.COLUMN_TYPE_CCOMBO, new String[] { "Y", "N" } );
+
+    tableFieldColumns.add( ciReturn[0] );
+    final TableView wReturn =
+        new TableView( transMeta, cGenScriptFields, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.V_SCROLL
+            | SWT.H_SCROLL, ciReturn, UpInsRows, lsMod, props );
+
+    Button wGetMapping = new Button( cGenScriptFields, SWT.PUSH );
+    wGetMapping.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.GetFields.Label" ) );
+    wGetMapping.addListener( SWT.Selection, new Listener() {
+      @Override
+      public void handleEvent( Event e ) {
+        try {
+          RowMetaInterface r = transMeta.getPrevStepFields( stepname );
+          if ( r != null ) {
+            TableItemInsertListener listener = new TableItemInsertListener() {
+              @Override
+              public boolean tableItemInserted( TableItem tableItem, ValueMetaInterface v ) {
+                if ( v.getType() == ValueMetaInterface.TYPE_DATE ) {
+                  // The default is : format is OK for dates, see if this sticks later on...
+                  //
+                  tableItem.setText( 3, "Y" );
+                } else {
+                  tableItem.setText( 3, "Y" ); // default is OK too...
+                }
+                return true;
+              }
+            };
+            BaseStepDialog.getFieldsFromPrevious( r, wReturn, 1, new int[] { 1, 2 }, new int[] {}, -1, -1, listener );
+          }
+        } catch ( KettleException ke ) {
+          new ErrorDialog( shell, BaseMessages
+              .getString( PKG, "TeraDataBulkLoaderDialog.FailedToGetFields.DialogTitle" ), BaseMessages.getString( PKG,
+                "TeraDataBulkLoaderDialog.FailedToGetFields.DialogMessage" ), ke );
+        }
+      }
+    } );
+    FormData fdGetLU = new FormData();
+    fdGetLU.top = new FormAttachment( wlReturn, margin );
+    fdGetLU.right = new FormAttachment( 100, 0 );
+    wGetMapping.setLayoutData( fdGetLU );
+
+    Button wDoMapping = new Button( cGenScriptFields, SWT.PUSH );
+    wDoMapping.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.EditMapping.Label" ) );
+    FormData fdDoMapping = new FormData();
+    fdDoMapping.top = new FormAttachment( wGetMapping, margin );
+    fdDoMapping.right = new FormAttachment( 100, 0 );
+    wDoMapping.setLayoutData( fdDoMapping );
+    wDoMapping.addListener( SWT.Selection, new Listener() {
+      @Override
+      public void handleEvent( Event arg0 ) {
+        generateMappings( wReturn, wSchema, wTable );
+      }
+    } );
+
+    FormData fdReturn = new FormData();
+    fdReturn.left = new FormAttachment( 0, 0 );
+    fdReturn.top = new FormAttachment( wlReturn, margin );
+    fdReturn.right = new FormAttachment( wGetMapping, -margin );
+    fdReturn.bottom = new FormAttachment( 100, 0 );
+    wReturn.setLayoutData( fdReturn );
+
+    final Runnable disableKeytable = new Runnable() {
+
+      @Override
+      public void run() {
+        int choice = cActionType.getSelection();
+        if ( choice == 0 ) {
+          wKey.setEnabled( false );
+          wKey.setVisible( false );
+          wGet.setEnabled( false );
+          wGet.setVisible( false );
+          wlKey.setVisible( false );
+        } else {
+          wKey.setEnabled( true );
+          wKey.setVisible( true );
+          wGet.setEnabled( true );
+          wGet.setVisible( true );
+          wlKey.setVisible( true );
+        }
+      }
+    };
+    cActionType.setCallback( disableKeytable );
+
+    dialogPopulators.add( new DialogPopulator() {
+
+      @Override
+      public void validate( List<String> errors ) {
+      }
+
+      @Override
+      public void populateMeta( TeraDataBulkLoaderMeta inf ) {
+        int nrkeys = wKey.nrNonEmpty();
+        int nrfields = wReturn.nrNonEmpty();
+        if ( log.isDebug() ) {
+          logDebug( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Log.FoundFields", "" + nrfields ) );
+        }
+        for ( int i = 0; i < nrkeys; i++ ) {
+          TableItem item = wKey.getNonEmpty( i );
+          ( inf.getKeyLookup() )[i] = item.getText( 1 );
+          ( inf.getKeyCondition() )[i] = item.getText( 2 );
+          ( inf.getKeyStream() )[i] = item.getText( 3 );
+        }
+
+        for ( int i = 0; i < nrfields; i++ ) {
+          TableItem item = wReturn.getNonEmpty( i );
+          ( inf.getFieldTable() )[i] = item.getText( 1 );
+          ( inf.getFieldStream() )[i] = item.getText( 2 );
+          ( inf.getFieldUpdate() )[i] = Boolean.valueOf( "Y".equals( item.getText( 3 ) ) );
+        }
+        inf.allocate( nrkeys, nrfields );
+        inf.setActionType( cActionType.getSelection() );
+      }
+
+      @Override
+      public void populateDialog( TeraDataBulkLoaderMeta input ) {
+        int ival;
+        if ( ( ival = input.getActionType() ) >= 0 ) {
+          cActionType.setSelection( ival );
+        }
+        if ( log.isDebug() ) {
+          logDebug( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Log.GettingKeyInfo" ) );
+        }
+        if ( input.getKeyStream() != null ) {
+          for ( int i = 0; i < input.getKeyStream().length; i++ ) {
+            TableItem item = wKey.table.getItem( i );
+            if ( input.getKeyLookup()[i] != null ) {
+              item.setText( 1, input.getKeyLookup()[i] );
+            }
+            if ( input.getKeyCondition()[i] != null ) {
+              item.setText( 2, input.getKeyCondition()[i] );
+            }
+            if ( input.getKeyStream()[i] != null ) {
+              item.setText( 3, input.getKeyStream()[i] );
+            }
+          }
+        }
+        if ( input.getFieldTable() != null ) {
+          logDebug( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.FieldTableLength",
+              input.getFieldTable().length ) );
+          for ( int i = 0; i < input.getFieldTable().length; i++ ) {
+            TableItem item = wReturn.table.getItem( i );
+            if ( input.getFieldTable()[i] != null ) {
+              item.setText( 1, input.getFieldTable()[i] );
+            }
+            if ( input.getFieldStream()[i] != null ) {
+              item.setText( 2, input.getFieldStream()[i] );
+            }
+            if ( input.getFieldUpdate()[i] == null || input.getFieldUpdate()[i].booleanValue() ) {
+              item.setText( 3, "Y" );
+            } else {
+              item.setText( 3, "N" );
+            }
+            logDebug( item.toString() );
+          }
+        }
+        wReturn.setRowNums();
+        wReturn.optWidth( true );
+      }
+    } );
+
+    cGenScriptFields.setLayout( new FormLayout() );
+    tiGenScriptFields.setControl( cGenScriptFields );
+
+    List<String> fields = new ArrayList<String>( getInputFields().getInputFields().keySet() );
+    Collections.sort( fields );
+    ciKey[2].setComboValues( fields.toArray( new String[fields.size()] ) );
+    ciReturn[1].setComboValues( fields.toArray( new String[fields.size()] ) );
+    disableKeytable.run();
+    setTableFieldCombo.run();
+  }
+
+  private void createUseScriptItemsTab() {
+    CTabItem tiUseScriptItems = new CTabItem( fItemSet, SWT.NONE );
+    tiUseScriptItems.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ScriptTab.Label" ) );
+    Composite cUseScriptItems = new Composite( fItemSet, SWT.BORDER );
+
+    /******************************************************************************************************************/
+    /********************************************************* Use Script Options Group *******************************/
+    /******************************************************************************************************************/
+    final TextVarMenuItem wControlFile =
+        new FileTextVarMenuItem( shell, cUseScriptItems, props, transMeta, lsMod, (Control) null,
+            "TeraDataBulkLoaderDialog.ControlFile.Label" );
+
+    CompositeMenuItem wSubstituteControlFile =
+        new CompositeMenuItem( props, lsMod, lsModSelect, input, cUseScriptItems, wControlFile,
+            "TeraDataBulkLoaderDialog.SubstituteControlFile.Label", 0 );
+    final Button wbSubstituteControlFile = wSubstituteControlFile.addButton( "", SWT.CHECK );
+
+    final TextVarMenuItem wVariableFile =
+        new FileTextVarMenuItem( shell, cUseScriptItems, props, transMeta, lsMod, wSubstituteControlFile,
+            "TeraDataBulkLoaderDialog.VariableFile.Label" );
+
+    /***************************************************/
+
+    tiUseScriptItems.setControl( cUseScriptItems );
+
+    cUseScriptItems.setLayout( new FormLayout() );
+    props.setLook( cUseScriptItems );
+
+    FormData fdScript = new FormData();
+    fdScript.left = new FormAttachment( 0, margin );
+    fdScript.top = new FormAttachment( 0, margin );
+    fdScript.right = new FormAttachment( 100, -margin );
+    fdScript.bottom = new FormAttachment( 100, -margin );
+    cUseScriptItems.setLayoutData( fdScript );
+    dialogPopulators.add( new DialogPopulator() {
+
+      @Override
+      public void validate( List<String> errors ) {
+        addIfVoid( errors, Const.isEmpty( wControlFile.getText() ),
+            "TeraDataBulkLoaderDialog.MissingControlFile.DialogMessage" );
+      }
+
+      @Override
+      public void populateMeta( TeraDataBulkLoaderMeta inf ) {
+        inf.setExistingScriptFile( wControlFile.getText() );
+        inf.setSubstituteControlFile( wbSubstituteControlFile.getSelection() );
+        inf.setVariableFile( wVariableFile.getText() );
+      }
+
+      @Override
+      public void populateDialog( TeraDataBulkLoaderMeta input ) {
+        String val;
+        Boolean bval;
+        if ( ( val = input.getExistingScriptFile() ) != null ) {
+          wControlFile.setText( val );
+        }
+        if ( ( bval = input.getSubstituteControlFile() ) != null ) {
+          wbSubstituteControlFile.setSelection( bval );
+        }
+        if ( ( val = input.getVariableFile() ) != null ) {
+          wVariableFile.setText( val );
+        }
+      }
+    } );
+  }
+
+  public void createDynamicTabs() {
+    int thisSelection = cScriptOption.getSelection();
+    if ( lastTypeSelection != thisSelection ) {
+      if ( thisSelection == 0 ) {
+        // enable disable as appropriate
+        wPreviewScript.setEnabled( true );
+        createDynamicTabs( true );
+      } else {
+        // enable disable as appropriate
+        wPreviewScript.setEnabled( false );
+        createDynamicTabs( false );
+      }
+      getDynamicData();
+    }
+    lastTypeSelection = thisSelection;
+  }
+
+  public void createDynamicTabs( boolean generated ) {
+    dialogPopulators.clear();
+    int i = 0;
+    while ( ( i = fItemSet.getItemCount() - 1 ) >= 0 ) {
+      CTabItem tab = fItemSet.getItem( i );
+      tab.getControl().dispose();
+      tab.dispose();
+    }
+    CTabItem tiExecutionItems = createExecutionTab();
+    if ( generated ) {
+      createGenScriptTabs();
+    } else {
+      createUseScriptItemsTab();
+    }
+    fItemSet.setSelection( tiExecutionItems );
+  }
+
   /**
    * Reads in the fields from the previous steps and from the ONE next step and opens an EnterMappingDialog with this
    * information. After the user did the mapping, those information is put into the Select/Rename table.
    */
-  private void generateMappings() {
+  private void generateMappings( TableView wReturn, TextVarMenuItem wSchema, TextVarMenuItem wTable ) {
 
     // Determine the source and target fields...
     //
@@ -1472,7 +1131,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 
   /**
    * Gets the stream and table fields.
-   *
+   * 
    * @return the stream and table fields
    */
   public String[] getStreamAndTableFields() {
@@ -1491,236 +1150,46 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
   }
 
   /**
-   * Copy information from the meta-data input to the dialog fields.
-   *
-   * @return the data
-   */
-  public void getData() {
-    if ( log.isDebug() ) {
-      logDebug( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Log.GettingKeyInfo" ) );
-    }
-
-    if ( input.getKeyStream() != null ) {
-      for ( int i = 0; i < input.getKeyStream().length; i++ ) {
-        TableItem item = wKey.table.getItem( i );
-        if ( input.getKeyLookup()[i] != null ) {
-          item.setText( 1, input.getKeyLookup()[i] );
-        }
-        if ( input.getKeyCondition()[i] != null ) {
-          item.setText( 2, input.getKeyCondition()[i] );
-        }
-        if ( input.getKeyStream()[i] != null ) {
-          item.setText( 3, input.getKeyStream()[i] );
-        }
-      }
-    }
-
-    if ( input.getFieldTable() != null ) {
-      logDebug(
-          BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.FieldTableLength", input.getFieldTable().length ) );
-      for ( int i = 0; i < input.getFieldTable().length; i++ ) {
-        TableItem item = wReturn.table.getItem( i );
-        if ( input.getFieldTable()[i] != null ) {
-          item.setText( 1, input.getFieldTable()[i] );
-        }
-        if ( input.getFieldStream()[i] != null ) {
-          item.setText( 2, input.getFieldStream()[i] );
-        }
-        if ( input.getFieldUpdate()[i] == null || input.getFieldUpdate()[i].booleanValue() ) {
-          item.setText( 3, "Y" );
-        } else {
-          item.setText( 3, "N" );
-        }
-        logDebug( item.toString() );
-      }
-    }
-
-    // store data from widgets
-    String val;
-    int ival;
-    Boolean bval;
-
-    /************************** Common variables **************************************/
-    if ( ( val = input.getTbuildPath() ) != null ) {
-      wTbuildPath.setText( val );
-    }
-    if ( ( val = input.getTbuildLibPath() ) != null ) {
-      wTbuildLibPath.setText( val );
-    }
-    if ( ( val = input.getLibPath() ) != null ) {
-      wLibPath.setText( val );
-    }
-    if ( ( val = input.getCopLibPath() ) != null ) {
-      wCopLibPath.setText( val );
-    }
-    if ( ( val = input.getTdicuLibPath() ) != null ) {
-      wTdicuLibPath.setText( val );
-    }
-    if ( ( val = input.getTdInstallPath() ) != null ) {
-      wTdInstall.setText( val );
-    }
-    if ( ( val = input.getTwbRoot() ) != null ) {
-      wTwbRoot.setText( val );
-    }
-
-    if ( ( val = input.getJobName() ) != null ) {
-      wJobName.setText( val );
-    }
-
-    if ( ( bval = input.getGenerateScript() ) != null ) {
-      cScriptOption.setSelection( bval ? 0 : 1 );
-    }
-
-    /************************** pre-created script option variables ************************/
-    if ( ( val = input.getVariableFile() ) != null ) {
-      wVariableFile.setText( val );
-    }
-    if ( ( val = input.getExistingScriptFile() ) != null ) {
-      wControlFile.setText( val );
-    }
-    if ( ( bval = input.getSubstituteControlFile() ) != null ) {
-      wbSubstituteControlFile.setSelection( bval );
-    }
-
-    /************************** generated option variables ************************/
-    if ( ( val = input.getSchemaName() ) != null ) {
-      wSchema.setText( val );
-    }
-    if ( ( val = input.getTableName() ) != null ) {
-      wTable.setText( val );
-    }
-    if ( ( val = input.getLogTable() ) != null ) {
-      wLogTable.setText( val );
-    }
-    if ( ( val = input.getWorkTable() ) != null ) {
-      wWorkTable.setText( val );
-    }
-
-    if ( ( val = input.getErrorTable() ) != null ) {
-      wErrorTable.setText( val );
-    }
-    if ( ( val = input.getErrorTable2() ) != null ) {
-      wErrorTable2.setText( val );
-    }
-    if ( ( bval = input.getDropLogTable() ) != null ) {
-      wbDropLog.setSelection( bval );
-    }
-    if ( ( bval = input.getDropWorkTable() ) != null ) {
-      wbDropWork.setSelection( bval );
-    }
-    if ( ( bval = input.getDropErrorTable() ) != null ) {
-      wbDropError.setSelection( bval );
-    }
-    if ( ( bval = input.getDropErrorTable2() ) != null ) {
-      wbDropError2.setSelection( bval );
-    }
-    if ( ( bval = input.getIgnoreDupUpdate() ) != null ) {
-      wbIgnoreDupUpdate.setSelection( bval );
-    }
-    if ( ( bval = input.getInsertMissingUpdate() ) != null ) {
-      wbInsertMissingUpdate.setSelection( bval );
-    }
-    if ( ( bval = input.getIgnoreMissingUpdate() ) != null ) {
-      wbIgnoreMissingUpdate.setSelection( bval );
-    }
-    if ( ( val = input.getAccessLogFile() ) != null ) {
-      wAccessLogFile.setText( val );
-    }
-    if ( ( val = input.getUpdateLogFile() ) != null ) {
-      wUpdateLogFile.setText( val );
-    }
-    if ( ( val = input.getFifoFileName() ) != null ) {
-      wDataFile.setText( val );
-    }
-    if ( ( val = input.getScriptFileName() ) != null ) {
-      wScriptFile.setText( val );
-    }
-
-    if ( ( ival = input.getActionType() ) >= 0 ) {
-      cActionType.setSelection( ival );
-    }
-
-    if ( input.getDatabaseMeta() != null ) {
-      wConnection.setText( input.getDatabaseMeta().getName() );
-    } else {
-      if ( transMeta.nrDatabases() == 1 ) {
-        wConnection.setText( transMeta.getDatabase( 0 ).getName() );
-      }
-    }
-    wReturn.setRowNums();
-    wReturn.optWidth( true );
-
-    wStepname.selectAll();
-    wStepname.setFocus();
-  }
-
-  /**
    * Sets the table field combo.
    */
-  private void setTableFieldCombo() {
-    Runnable fieldLoader = new Runnable() {
-      public void run() {
-        if ( !wTable.getTextVar().isDisposed() && !wConnection.isDisposed() ) {
-          // clear
-          for ( int i = 0; i < tableFieldColumns.size(); i++ ) {
-            ColumnInfo colInfo = tableFieldColumns.get( i );
-            colInfo.setComboValues( new String[] {} );
-          }
-          if ( !Const.isEmpty( wTable.getText() ) ) {
-            DatabaseMeta ci = transMeta.findDatabase( wConnection.getText() );
-            if ( ci != null ) {
-              Database db = new Database( loggingObject, ci );
-              try {
-                db.connect();
+  private void setTableFieldCombo( final TextVarMenuItem wSchema, final TextVarMenuItem wTable ) {
+    if ( !wTable.getTextVar().isDisposed() && !wConnection.isDisposed() ) {
+      // clear
+      for ( int i = 0; i < tableFieldColumns.size(); i++ ) {
+        ColumnInfo colInfo = tableFieldColumns.get( i );
+        colInfo.setComboValues( new String[] {} );
+      }
+      if ( !Const.isEmpty( wTable.getText() ) ) {
+        DatabaseMeta ci = transMeta.findDatabase( wConnection.getText() );
+        if ( ci != null ) {
+          Database db = new Database( loggingObject, ci );
+          try {
+            db.connect();
 
-                String schemaTable =
-                    ci.getQuotedSchemaTableCombination( transMeta.environmentSubstitute( wSchema.getText() ), transMeta
-                        .environmentSubstitute( wTable.getText() ) );
-                RowMetaInterface r = db.getTableFields( schemaTable );
-                if ( null != r ) {
-                  String[] fieldNames = r.getFieldNames();
-                  if ( null != fieldNames ) {
-                    for ( int i = 0; i < tableFieldColumns.size(); i++ ) {
-                      ColumnInfo colInfo = tableFieldColumns.get( i );
-                      colInfo.setComboValues( fieldNames );
-                    }
-                  }
-                }
-              } catch ( Exception e ) {
+            String schemaTable =
+                ci.getQuotedSchemaTableCombination( transMeta.environmentSubstitute( wSchema.getText() ), transMeta
+                    .environmentSubstitute( wTable.getText() ) );
+            RowMetaInterface r = db.getTableFields( schemaTable );
+            if ( null != r ) {
+              String[] fieldNames = r.getFieldNames();
+              if ( null != fieldNames ) {
                 for ( int i = 0; i < tableFieldColumns.size(); i++ ) {
                   ColumnInfo colInfo = tableFieldColumns.get( i );
-                  colInfo.setComboValues( new String[] {} );
+                  colInfo.setComboValues( fieldNames );
                 }
-                // ignore any errors here. drop downs will not be
-                // filled, but no problem for the user
               }
             }
+          } catch ( Exception e ) {
+            for ( int i = 0; i < tableFieldColumns.size(); i++ ) {
+              ColumnInfo colInfo = tableFieldColumns.get( i );
+              colInfo.setComboValues( new String[] {} );
+            }
+            // ignore any errors here. drop downs will not be
+            // filled, but no problem for the user
           }
         }
       }
-    };
-    shell.getDisplay().asyncExec( fieldLoader );
-  }
-
-  /**
-   * Sets the combo boxes.
-   */
-  protected void setComboBoxes() {
-    // Something was changed in the row.
-    //
-    final Map<String, Integer> fields = new HashMap<String, Integer>();
-
-    // Add the currentMeta fields...
-    fields.putAll( inputFields );
-
-    Set<String> keySet = fields.keySet();
-    List<String> entries = new ArrayList<String>( keySet );
-
-    String[] fieldNames = (String[]) entries.toArray( new String[entries.size()] );
-    Const.sortStrings( fieldNames );
-    // return fields
-    ciReturn[1].setComboValues( fieldNames );
-    ciKey[2].setComboValues( fieldNames );
+    }
   }
 
   /**
@@ -1734,178 +1203,25 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 
   /**
    * Gets the info.
-   *
-   * @param inf the inf
+   * 
+   * @param inf
+   *          the inf
    * @return the info
    */
   private void getInfo( TeraDataBulkLoaderMeta inf ) {
-    int nrkeys = wKey.nrNonEmpty();
-    int nrfields = wReturn.nrNonEmpty();
-
-    inf.allocate( nrkeys, nrfields );
-
-    if ( log.isDebug() ) {
-      logDebug( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Log.FoundFields", "" + nrfields ) );
-    }
-    for ( int i = 0; i < nrkeys; i++ ) {
-      TableItem item = wKey.getNonEmpty( i );
-      ( inf.getKeyLookup() )[i] = item.getText( 1 );
-      ( inf.getKeyCondition() )[i] = item.getText( 2 );
-      ( inf.getKeyStream() )[i] = item.getText( 3 );
-    }
-
-    for ( int i = 0; i < nrfields; i++ ) {
-      TableItem item = wReturn.getNonEmpty( i );
-      ( inf.getFieldTable() )[i] = item.getText( 1 );
-      ( inf.getFieldStream() )[i] = item.getText( 2 );
-      ( inf.getFieldUpdate() )[i] = Boolean.valueOf( "Y".equals( item.getText( 3 ) ) );
-    }
-
     // populate meta from widgets
-    inf.setTbuildPath( wTbuildPath.getText() );
-    inf.setTbuildLibPath( wTbuildLibPath.getText() );
-    inf.setLibPath( wLibPath.getText() );
-    inf.setCopLibPath( wCopLibPath.getText() );
-    inf.setTdicuLibPath( wTdicuLibPath.getText() );
-    inf.setTdInstallPath( wTdInstall.getText() );
-    inf.setTwbRoot( wTwbRoot.getText() );
-
-    inf.setJobName( wJobName.getText() );
+    for ( DialogPopulator dialogPopulator : dialogPopulators ) {
+      dialogPopulator.populateMeta( inf );
+    }
 
     inf.setGenerateScript( cScriptOption.getSelection() == 0 );
-
-    // Use script options
-    inf.setExistingScriptFile( wControlFile.getText() );
-    inf.setSubstituteControlFile( wbSubstituteControlFile.getSelection() );
-    inf.setVariableFile( wVariableFile.getText() );
-
-    // Generate script options
-    inf.setSchemaName( wSchema.getText() );
-    inf.setTableName( wTable.getText() );
-    inf.setLogTable( wLogTable.getText() );
-    inf.setWorkTable( wWorkTable.getText() );
-
-    inf.setErrorTable( wErrorTable.getText() );
-    inf.setErrorTable2( wErrorTable2.getText() );
-    inf.setDropLogTable( wbDropLog.getSelection() );
-    inf.setDropWorkTable( wbDropWork.getSelection() );
-
-    inf.setDropErrorTable( wbDropError.getSelection() );
-    inf.setDropErrorTable2( wbDropError2.getSelection() );
-    inf.setIgnoreDupUpdate( wbIgnoreDupUpdate.getSelection() );
-    inf.setInsertMissingUpdate( wbInsertMissingUpdate.getSelection() );
-    inf.setIgnoreMissingUpdate( wbIgnoreMissingUpdate.getSelection() );
-    inf.setAccessLogFile( wAccessLogFile.getText() );
-    inf.setUpdateLogFile( wUpdateLogFile.getText() );
-    inf.setFifoFileName( wDataFile.getText() );
-    inf.setScriptFileName( wScriptFile.getText() );
-    inf.setActionType( cActionType.getSelection() );
     inf.setDatabaseMeta( transMeta.findDatabase( wConnection.getText() ) );
-
     stepname = wStepname.getText(); // return value
   }
 
-  /**
-   * The Class requiredFieldsError.
-   */
-  private class requiredFieldsError {
-
-    /** The messages. */
-    private StringBuffer messages;
-
-    /** The title. */
-    private String title;
-
-    /** The msgcount. */
-    private int msgcount = 0;
-
-    /**
-     * Instantiates a new required fields error.
-     *
-     * @param s the s
-     * @param msg the msg
-     */
-    requiredFieldsError( String s, String msg ) {
-      title = s;
-      messages = new StringBuffer( msg + "\n" );
-    }
-
-    /**
-     * Adds the message.
-     *
-     * @param s the s
-     */
-    public void addMessage( String s ) {
-      messages.append( s + "\n" );
-      msgcount++;
-    }
-
-    /**
-     * Checks for errors.
-     *
-     * @return true, if successful
-     */
-    public boolean hasErrors() {
-      return msgcount > 0;
-    }
-
-    /**
-     * Display.
-     */
-    public void display() {
-      MessageBox mb = new MessageBox( shell, SWT.OK | SWT.ICON_ERROR );
-      mb.setMessage( messages.toString() );
-      mb.setText( title );
-      mb.open();
-    }
-
-    /**
-     * Adds the if undef.
-     *
-     * @param text the text
-     * @param msg the msg
-     */
-    public void addIfUndef( TextVarMenuItem text, String msg ) {
-      if ( Const.isEmpty( text.getText() ) ) {
-        addMessage( BaseMessages.getString( PKG, msg ) );
-      }
-    }
-
-    /**
-     * Adds the if undef.
-     *
-     * @param text the text
-     * @param msg the msg
-     */
-    public void addIfUndef( Text text, String msg ) {
-      if ( Const.isEmpty( text.getText() ) ) {
-        addMessage( BaseMessages.getString( PKG, msg ) );
-      }
-    }
-
-    /**
-     * Adds the if undef.
-     *
-     * @param text the text
-     * @param msg the msg
-     */
-    public void addIfUndef( CCombo text, String msg ) {
-      if ( Const.isEmpty( text.getText() ) ) {
-        addMessage( BaseMessages.getString( PKG, msg ) );
-      }
-    }
-
-    /**
-     * Adds the if undef.
-     *
-     * @param databaseMeta the database meta
-     * @param msg the msg
-     */
-    @SuppressWarnings( "unused" )
-    public void addIfUndef( DatabaseMeta databaseMeta, String msg ) {
-      if ( databaseMeta == null ) {
-        addMessage( BaseMessages.getString( PKG, msg ) );
-      }
+  private <T> void addIfVoid( List<String> list, boolean isVoid, String message ) {
+    if ( isVoid ) {
+      list.add( BaseMessages.getString( PKG, message ) );
     }
   }
 
@@ -1913,23 +1229,22 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
    * Ok.
    */
   private void ok() {
-    final requiredFieldsError errorPopup =
-        new requiredFieldsError( BaseMessages.getString( PKG,
+    final RequiredFieldsError errorPopup =
+        new RequiredFieldsError( shell, BaseMessages.getString( PKG,
             "TeraDataBulkLoaderDialog.MissingRequiredTitle.DialogMessage" ), BaseMessages.getString( PKG,
               "TeraDataBulkLoaderDialog.MissingRequiredMsg.DialogMessage" ) );
 
     // Always required
     errorPopup.addIfUndef( wStepname, "TeraDataBulkLoaderDialog.MissingStepname.DialogMessage" );
     errorPopup.addIfUndef( wConnection, "TeraDataBulkLoaderDialog.InvalidConnection.DialogMessage" );
-    errorPopup.addIfUndef( wTdInstall, "TeraDataBulkLoaderDialog.MissingInstallPath.DialogMessage" );
 
     // Required depending on option
-    if ( cScriptOption.getSelection() == 0 ) {
-      errorPopup.addIfUndef( wLogTable, "TeraDataBulkLoaderDialog.MissingLogTable.DialogMessage" );
-      errorPopup.addIfUndef( wTable, "TeraDataBulkLoaderDialog.MissingTargetTable.DialogMessage" );
-      errorPopup.addIfUndef( wSchema, "TeraDataBulkLoaderDialog.MissingSchema.DialogMessage" );
-    } else {
-      errorPopup.addIfUndef( wControlFile, "TeraDataBulkLoaderDialog.MissingControlFile.DialogMessage" );
+    List<String> errors = new ArrayList<String>();
+    for ( DialogPopulator dialogPopulator : dialogPopulators ) {
+      dialogPopulator.validate( errors );
+    }
+    for ( String error : errors ) {
+      errorPopup.addMessage( error );
     }
 
     // check for errors?
@@ -1941,106 +1256,34 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     }
   }
 
-  /**
-   * Disable inputs.
-   */
-  public void disableInputs() {
-    int choice = cScriptOption.getSelection();
-    if ( choice == 0 ) {
-      // enable disable as appropriate
-      wPreviewScript.setEnabled( true );
-      cGenScriptControlItems.setEnabled( true );
-      cGenScriptFields.setEnabled( true );
-      cUseScriptItems.setEnabled( false );
-      // change visibility of disable messages
-      cGenScriptControlItemsDisableMsg.setVisible( false );
-      cGenScriptFieldsDisableMsg.setVisible( false );
-      cUseScriptItemsDisableMsg.setVisible( true );
+  public void getData() {
+    Boolean bval;
 
-      // select appropriate tab
-      fItemSet.setSelection( tiGenScriptControlItems );
+    /************************** Common variables **************************************/
+
+    if ( ( bval = input.getGenerateScript() ) != null ) {
+      cScriptOption.setSelection( bval ? 0 : 1 );
+    }
+
+    /************************** generated option variables ************************/
+
+    if ( input.getDatabaseMeta() != null ) {
+      wConnection.setText( input.getDatabaseMeta().getName() );
     } else {
-      // enable disable as appropriate
-      wPreviewScript.setEnabled( false );
-      cGenScriptControlItems.setEnabled( false );
-      cGenScriptFields.setEnabled( false );
-      cUseScriptItems.setEnabled( true );
-      // change visibility of disable messages
-      cUseScriptItemsDisableMsg.setVisible( false );
-      cGenScriptControlItemsDisableMsg.setVisible( true );
-      cGenScriptFieldsDisableMsg.setVisible( true );
-      // select appropriate tab
-      fItemSet.setSelection( tiUseScriptItems );
-    }
-  }
-
-  /**
-   * Disable keytable.
-   */
-  public void disableKeytable() {
-    int choice = cActionType.getSelection();
-    if ( choice == 0 ) {
-      wKey.setEnabled( false );
-      wKey.setVisible( false );
-      wGet.setEnabled( false );
-      wGet.setVisible( false );
-      wlKey.setVisible( false );
-    } else {
-      wKey.setEnabled( true );
-      wKey.setVisible( true );
-      wGet.setEnabled( true );
-      wGet.setVisible( true );
-      wlKey.setVisible( true );
-    }
-  }
-
-  /**
-   * Gets the.
-   */
-  private void get() {
-    try {
-      RowMetaInterface r = transMeta.getPrevStepFields( stepname );
-      if ( r != null ) {
-        TableItemInsertListener listener = new TableItemInsertListener() {
-          public boolean tableItemInserted( TableItem tableItem, ValueMetaInterface v ) {
-            tableItem.setText( 2, "=" );
-            return true;
-          }
-        };
-        BaseStepDialog.getFieldsFromPrevious( r, wKey, 1, new int[] { 1, 3 }, new int[] {}, -1, -1, listener );
+      if ( transMeta.nrDatabases() == 1 ) {
+        wConnection.setText( transMeta.getDatabase( 0 ).getName() );
       }
-    } catch ( KettleException ke ) {
-      new ErrorDialog( shell, BaseMessages.getString( PKG, "InsertUpdateDialog.FailedToGetFields.DialogTitle" ),
-          BaseMessages.getString( PKG, "InsertUpdateDialog.FailedToGetFields.DialogMessage" ), ke );
     }
+
+    createDynamicTabs();
+
+    wStepname.selectAll();
+    wStepname.setFocus();
   }
 
-  /**
-   * Gets the update.
-   *
-   * @return the update
-   */
-  private void getUpdate() {
-    try {
-      RowMetaInterface r = transMeta.getPrevStepFields( stepname );
-      if ( r != null ) {
-        TableItemInsertListener listener = new TableItemInsertListener() {
-          public boolean tableItemInserted( TableItem tableItem, ValueMetaInterface v ) {
-            if ( v.getType() == ValueMetaInterface.TYPE_DATE ) {
-              // The default is : format is OK for dates, see if this sticks later on...
-              //
-              tableItem.setText( 3, "Y" );
-            } else {
-              tableItem.setText( 3, "Y" ); // default is OK too...
-            }
-            return true;
-          }
-        };
-        BaseStepDialog.getFieldsFromPrevious( r, wReturn, 1, new int[] { 1, 2 }, new int[] {}, -1, -1, listener );
-      }
-    } catch ( KettleException ke ) {
-      new ErrorDialog( shell, BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.FailedToGetFields.DialogTitle" ),
-          BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.FailedToGetFields.DialogMessage" ), ke );
+  public void getDynamicData() {
+    for ( DialogPopulator dialogPopulator : dialogPopulators ) {
+      dialogPopulator.populateDialog( input );
     }
   }
 
@@ -2048,11 +1291,13 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
    * Preview script.
    */
   public void previewScript() {
+    InputFields inputFields = getInputFields();
     TeraDataBulkLoaderMeta metacopy = new TeraDataBulkLoaderMeta();
     getInfo( metacopy );
     TeraDataBulkLoaderRoutines routines = new TeraDataBulkLoaderRoutines( null, metacopy );
     try {
-      String script = routines.createGeneratedScriptFile( inputFieldType, inputFieldLength );
+      String script =
+          routines.createGeneratedScriptFile( inputFields.getInputFieldType(), inputFields.getInputFieldLength() );
       Shell mb = new Shell();
       mb.setLayout( new FillLayout() );
       Text msg = new Text( mb, SWT.BORDER_SOLID | SWT.MULTI | SWT.V_SCROLL );

@@ -313,6 +313,7 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     /* (non-Javadoc)
      * @see java.lang.Thread#run()
      */
+    @Override
     public void run() {
       StringBuilder errors = new StringBuilder();
 
@@ -360,6 +361,7 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
   /** 
    * Process individual incoming rows
    */
+  @Override
   public boolean processRow( StepMetaInterface smi, StepDataInterface sdi ) throws KettleException {
     meta = (TeraDataBulkLoaderMeta) smi;
     data = (TeraDataBulkLoaderData) sdi;
@@ -494,6 +496,7 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
   /**
    * Initialize this step
    */
+  @Override
   public boolean init( StepMetaInterface smi, StepDataInterface sdi ) {
     meta = (TeraDataBulkLoaderMeta) smi;
     data = (TeraDataBulkLoaderData) sdi;
@@ -507,6 +510,7 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
   /**
    * Dispose of this step (called as a cleanup method)
    */
+  @Override
   public void dispose( StepMetaInterface smi, StepDataInterface sdi ) {
     meta = (TeraDataBulkLoaderMeta) smi;
     data = (TeraDataBulkLoaderData) sdi;
@@ -573,6 +577,7 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     /* (non-Javadoc)
      * @see java.lang.Thread#run()
      */
+    @Override
     public void run() {
       try {
         fifoStream = new DataOutputStream( new FileOutputStream( OpenFifo.this.fifoName ) );
