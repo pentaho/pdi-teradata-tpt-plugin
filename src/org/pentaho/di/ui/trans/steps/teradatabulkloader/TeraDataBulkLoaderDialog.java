@@ -833,6 +833,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
       public void populateMeta( TeraDataBulkLoaderMeta inf ) {
         int nrkeys = wKey.nrNonEmpty();
         int nrfields = wReturn.nrNonEmpty();
+        inf.allocate( nrkeys, nrfields );
         if ( log.isDebug() ) {
           logDebug( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.Log.FoundFields", "" + nrfields ) );
         }
@@ -849,7 +850,6 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
           ( inf.getFieldStream() )[i] = item.getText( 2 );
           ( inf.getFieldUpdate() )[i] = Boolean.valueOf( "Y".equals( item.getText( 3 ) ) );
         }
-        inf.allocate( nrkeys, nrfields );
         inf.setActionType( cActionType.getSelection() );
       }
 
