@@ -262,6 +262,7 @@ public class TeraDataBulkLoaderRoutines {
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
       StringAppender cmd = new StringAppender( "APPLY \n" );
       for ( int i = 0; i < fieldList.size(); i++ ) {
@@ -378,6 +379,7 @@ public class TeraDataBulkLoaderRoutines {
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
       StringAppender cmd = new StringAppender();
       switch ( this.type ) {
