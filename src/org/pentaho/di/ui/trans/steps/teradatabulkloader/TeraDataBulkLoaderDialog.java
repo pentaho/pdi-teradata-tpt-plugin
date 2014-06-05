@@ -673,6 +673,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     wGet.addListener( SWT.Selection, new Listener() {
       @Override
       public void handleEvent( Event e ) {
+        setTableFieldCombo.run();
         try {
           RowMetaInterface r = transMeta.getPrevStepFields( stepname );
           if ( r != null ) {
@@ -738,6 +739,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
       @Override
       public void handleEvent( Event e ) {
         try {
+          setTableFieldCombo.run();
           RowMetaInterface r = transMeta.getPrevStepFields( stepname );
           if ( r != null ) {
             TableItemInsertListener listener = new TableItemInsertListener() {
