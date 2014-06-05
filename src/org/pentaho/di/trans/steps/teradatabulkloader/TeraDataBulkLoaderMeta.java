@@ -108,7 +108,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   private String jobName = null;
 
   /** The generate script. */
-  private Boolean generateScript = null;
+  private boolean generateScript = false;
 
   /** The tbuild lib path. */
   private String tbuildLibPath = null;
@@ -135,10 +135,10 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   private String existingVariableFile = null;
 
   /** The substitute script file. */
-  private Boolean substituteScriptFile = null;
+  private boolean substituteScriptFile = false;
 
   /** The substitute variable file. */
-  private Boolean substituteVariableFile = null;
+  private boolean substituteVariableFile = false;
 
   /* Dialog populated variables - generate script */
   /** The fifo file name. */
@@ -166,25 +166,25 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   private String errorTable2 = null;
 
   /** The drop log table. */
-  private Boolean dropLogTable = false;
+  private boolean dropLogTable = false;
 
   /** The drop work table. */
-  private Boolean dropWorkTable = false;
+  private boolean dropWorkTable = false;
 
   /** The drop error table. */
-  private Boolean dropErrorTable = false;
+  private boolean dropErrorTable = false;
 
   /** The drop error table2. */
-  private Boolean dropErrorTable2 = false;
+  private boolean dropErrorTable2 = false;
 
   /** The ignore dup update. */
-  private Boolean ignoreDupUpdate = false;
+  private boolean ignoreDupUpdate = false;
 
   /** The insert missing update. */
-  private Boolean insertMissingUpdate = false;
+  private boolean insertMissingUpdate = false;
 
   /** The ignore missing update. */
-  private Boolean ignoreMissingUpdate = false;
+  private boolean ignoreMissingUpdate = false;
 
   /** The access log file. */
   private String accessLogFile = null;
@@ -245,7 +245,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    * @param val the val
    * @return the boolean
    */
-  public Boolean setGenerateScript( Boolean val ) {
+  public boolean setGenerateScript( boolean val ) {
     return this.generateScript = val;
   }
 
@@ -254,7 +254,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    *
    * @return the generate script
    */
-  public Boolean getGenerateScript() {
+  public boolean getGenerateScript() {
     return this.generateScript;
   }
 
@@ -264,7 +264,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    * @param val the val
    * @return the boolean
    */
-  public Boolean setSubstituteControlFile( Boolean val ) {
+  public boolean setSubstituteControlFile( boolean val ) {
     return this.substituteScriptFile = val;
   }
 
@@ -273,7 +273,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    *
    * @return the substitute control file
    */
-  public Boolean getSubstituteControlFile() {
+  public boolean getSubstituteControlFile() {
     return this.substituteScriptFile;
   }
 
@@ -339,7 +339,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    *
    * @return the drop log table
    */
-  public Boolean getDropLogTable() {
+  public boolean getDropLogTable() {
     return this.dropLogTable;
   }
 
@@ -349,7 +349,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    * @param val the val
    * @return the boolean
    */
-  public Boolean setDropLogTable( Boolean val ) {
+  public boolean setDropLogTable( boolean val ) {
     return this.dropLogTable = val;
   }
 
@@ -358,7 +358,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    *
    * @return the drop work table
    */
-  public Boolean getDropWorkTable() {
+  public boolean getDropWorkTable() {
     return this.dropWorkTable;
   }
 
@@ -368,7 +368,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    * @param val the val
    * @return the boolean
    */
-  public Boolean setDropWorkTable( Boolean val ) {
+  public boolean setDropWorkTable( boolean val ) {
     return this.dropWorkTable = val;
   }
 
@@ -377,7 +377,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    *
    * @return the drop error table
    */
-  public Boolean getDropErrorTable() {
+  public boolean getDropErrorTable() {
     return this.dropErrorTable;
   }
 
@@ -387,7 +387,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    * @param val the val
    * @return the boolean
    */
-  public Boolean setDropErrorTable( Boolean val ) {
+  public boolean setDropErrorTable( boolean val ) {
     return this.dropErrorTable = val;
   }
 
@@ -396,7 +396,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    *
    * @return the drop error table2
    */
-  public Boolean getDropErrorTable2() {
+  public boolean getDropErrorTable2() {
     return this.dropErrorTable2;
   }
 
@@ -406,7 +406,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    * @param val the val
    * @return the boolean
    */
-  public Boolean setDropErrorTable2( Boolean val ) {
+  public boolean setDropErrorTable2( boolean val ) {
     return this.dropErrorTable2 = val;
   }
 
@@ -415,7 +415,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    *
    * @return the ignore dup update
    */
-  public Boolean getIgnoreDupUpdate() {
+  public boolean getIgnoreDupUpdate() {
     return this.ignoreDupUpdate;
   }
 
@@ -425,7 +425,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    * @param val the val
    * @return the boolean
    */
-  public Boolean setIgnoreDupUpdate( Boolean val ) {
+  public boolean setIgnoreDupUpdate( boolean val ) {
     return this.ignoreDupUpdate = val;
   }
 
@@ -434,7 +434,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    *
    * @return the insert missing update
    */
-  public Boolean getInsertMissingUpdate() {
+  public boolean getInsertMissingUpdate() {
     return this.insertMissingUpdate;
   }
 
@@ -444,7 +444,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    * @param val the val
    * @return the boolean
    */
-  public Boolean setInsertMissingUpdate( Boolean val ) {
+  public boolean setInsertMissingUpdate( boolean val ) {
     return this.insertMissingUpdate = val;
   }
 
@@ -453,7 +453,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    *
    * @return the ignore missing update
    */
-  public Boolean getIgnoreMissingUpdate() {
+  public boolean getIgnoreMissingUpdate() {
     return this.ignoreMissingUpdate;
   }
 
@@ -463,7 +463,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    * @param val the val
    * @return the boolean
    */
-  public Boolean setIgnoreMissingUpdate( Boolean val ) {
+  public boolean setIgnoreMissingUpdate( boolean val ) {
     return this.ignoreMissingUpdate = val;
   }
 
@@ -472,7 +472,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    *
    * @return the substitute variable file
    */
-  public Boolean getSubstituteVariableFile() {
+  public boolean getSubstituteVariableFile() {
     return this.substituteVariableFile;
   }
 
@@ -482,7 +482,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    * @param val the val
    * @return the boolean
    */
-  public Boolean setSubstituteVariableFile( Boolean val ) {
+  public boolean setSubstituteVariableFile( boolean val ) {
     return this.substituteVariableFile = val;
   }
 
@@ -1116,9 +1116,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     // common
     retval
         .append( "    " ).append( XMLHandler.addTagValue( "connection", databaseMeta == null ? "" : databaseMeta.getName() ) ); //$NON-NLS-3$
-    if ( generateScript != null ) {
-      retval.append( "    " ).append( XMLHandler.addTagValue( "generateScript", generateScript ) );
-    }
+    retval.append( "    " ).append( XMLHandler.addTagValue( "generateScript", generateScript ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "tbuildPath", tbuildPath ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "tbuildLibPath", tbuildLibPath ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "libPath", libPath ) );
@@ -1150,13 +1148,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
     // pre-existing options
     retval.append( "    " ).append( XMLHandler.addTagValue( "existingScriptFile", existingScriptFile ) );
-    if ( substituteScriptFile != null ) {
-      retval.append( "    " ).append( XMLHandler.addTagValue( "substituteScriptFile", substituteScriptFile ) );
-    }
+    retval.append( "    " ).append( XMLHandler.addTagValue( "substituteScriptFile", substituteScriptFile ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "existingVariableFile", existingVariableFile ) );
-    if ( substituteVariableFile != null ) {
-      retval.append( "    " ).append( XMLHandler.addTagValue( "substituteVariableFile", substituteVariableFile ) );
-    }
+    retval.append( "    " ).append( XMLHandler.addTagValue( "substituteVariableFile", substituteVariableFile ) );
 
     retval.append( "    <lookup>" ).append( Const.CR );
     for ( int i = 0; i < keyStream.length; i++ ) {

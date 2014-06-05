@@ -588,7 +588,6 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
       @Override
       public void populateDialog( TeraDataBulkLoaderMeta input ) {
         String val;
-        Boolean bval;
         if ( ( val = input.getSchemaName() ) != null ) {
           wSchema.setText( val );
         }
@@ -607,27 +606,6 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
         if ( ( val = input.getErrorTable2() ) != null ) {
           wErrorTable2.setText( val );
         }
-        if ( ( bval = input.getDropLogTable() ) != null ) {
-          wbDropLog.setSelection( bval );
-        }
-        if ( ( bval = input.getDropWorkTable() ) != null ) {
-          wbDropWork.setSelection( bval );
-        }
-        if ( ( bval = input.getDropErrorTable() ) != null ) {
-          wbDropError.setSelection( bval );
-        }
-        if ( ( bval = input.getDropErrorTable2() ) != null ) {
-          wbDropError2.setSelection( bval );
-        }
-        if ( ( bval = input.getIgnoreDupUpdate() ) != null ) {
-          wbIgnoreDupUpdate.setSelection( bval );
-        }
-        if ( ( bval = input.getInsertMissingUpdate() ) != null ) {
-          wbInsertMissingUpdate.setSelection( bval );
-        }
-        if ( ( bval = input.getIgnoreMissingUpdate() ) != null ) {
-          wbIgnoreMissingUpdate.setSelection( bval );
-        }
         if ( ( val = input.getAccessLogFile() ) != null ) {
           wAccessLogFile.setText( val );
         }
@@ -637,6 +615,14 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
         if ( ( val = input.getScriptFileName() ) != null ) {
           wScriptFile.setText( val );
         }
+        
+        wbDropLog.setSelection( input.getDropLogTable() );
+        wbDropWork.setSelection( input.getDropWorkTable() );
+        wbDropError.setSelection( input.getDropErrorTable() );
+        wbDropError2.setSelection( input.getDropErrorTable2() );
+        wbIgnoreDupUpdate.setSelection( input.getIgnoreDupUpdate() );
+        wbInsertMissingUpdate.setSelection( input.getInsertMissingUpdate() );
+        wbIgnoreMissingUpdate.setSelection( input.getIgnoreMissingUpdate() );
       }
     } );
 
@@ -963,13 +949,10 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
       @Override
       public void populateDialog( TeraDataBulkLoaderMeta input ) {
         String val;
-        Boolean bval;
         if ( ( val = input.getExistingScriptFile() ) != null ) {
           wControlFile.setText( val );
         }
-        if ( ( bval = input.getSubstituteControlFile() ) != null ) {
-          wbSubstituteControlFile.setSelection( bval );
-        }
+        wbSubstituteControlFile.setSelection( input.getSubstituteControlFile() );
         if ( ( val = input.getVariableFile() ) != null ) {
           wVariableFile.setText( val );
         }
@@ -1257,15 +1240,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
   }
 
   public void getData() {
-    Boolean bval;
-
-    /************************** Common variables **************************************/
-
-    if ( ( bval = input.getGenerateScript() ) != null ) {
-      cScriptOption.setSelection( bval ? 0 : 1 );
-    }
-
-    /************************** generated option variables ************************/
+    cScriptOption.setSelection( input.getGenerateScript() ? 0 : 1 );
 
     if ( input.getDatabaseMeta() != null ) {
       wConnection.setText( input.getDatabaseMeta().getName() );
