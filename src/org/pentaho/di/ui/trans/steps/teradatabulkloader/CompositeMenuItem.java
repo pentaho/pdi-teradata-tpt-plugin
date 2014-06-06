@@ -214,7 +214,9 @@ class CompositeMenuItem {
    */
   public RadioComposite addRadioComposite( String[] labels, int opts, final Object p, final Runnable callback ) {
     RadioComposite rc = new RadioComposite( props, baseStepMeta, composite, opts );
-    rc.setLayout( new RowLayout() );
+    RowLayout layout = new RowLayout();
+    rc.setLayout( layout );
+    layout.spacing = Const.MARGIN;
     if ( callback != null ) {
       rc.addListener( new Listener() {
         @Override
