@@ -43,6 +43,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -481,6 +482,16 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     return tiExecutionItems;
   }
 
+  private Button createCheckbox( Composite parent, int style, String label, Listener listener ) {
+    Button button = new Button( parent, style | SWT.CHECK );
+    if ( !Const.isEmpty( label ) ) {
+      button.setText( BaseMessages.getString( TeraDataBulkLoaderDialog.PKG, label ) );
+    }
+    button.addListener( SWT.CHECK, listener );
+    props.setLook( button );
+    return button;
+  }
+
   private void createGenScriptTabs() {
     CTabItem tiGenScriptControlItems = new CTabItem( fItemSet, SWT.NONE );
     tiGenScriptControlItems.setText( BaseMessages.getString( PKG,
@@ -514,44 +525,98 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     wTable.getTextVar().addModifyListener( lsTableMod );
     final TextVarMenuItem wLogTable =
         new NoButtonTextVarMenuItem( cGenScriptControlItems, props, transMeta, lsMod, wTable,
-            "TeraDataBulkLoaderDialog.LogTable.Label" );
+            "TeraDataBulkLoaderDialog.LogTablePrompt.Label" );
     final TextVarMenuItem wWorkTable =
         new NoButtonTextVarMenuItem( cGenScriptControlItems, props, transMeta, lsMod, wLogTable,
-            "TeraDataBulkLoaderDialog.WorkTable.Label" );
+            "TeraDataBulkLoaderDialog.WorkTablePrompt.Label" );
     final TextVarMenuItem wErrorTable =
         new NoButtonTextVarMenuItem( cGenScriptControlItems, props, transMeta, lsMod, wWorkTable,
-            "TeraDataBulkLoaderDialog.ErrorTable.Label" );
+            "TeraDataBulkLoaderDialog.ErrorTablePrompt.Label" );
     final TextVarMenuItem wErrorTable2 =
         new NoButtonTextVarMenuItem( cGenScriptControlItems, props, transMeta, lsMod, wErrorTable,
-            "TeraDataBulkLoaderDialog.ErrorTable2.Label" );
+            "TeraDataBulkLoaderDialog.ErrorTable2Prompt.Label" );
+    final TextVarMenuItem wScriptFile =
+        new NoButtonTextVarMenuItem( cGenScriptControlItems, props, transMeta, lsMod, wErrorTable2,
+            "TeraDataBulkLoaderDialog.ScriptFile.Label" );
 
-    CompositeMenuItem wDropTables =
-        new CompositeMenuItem( props, lsMod, lsModSelect, input, cGenScriptControlItems, wErrorTable2,
-            "TeraDataBulkLoaderDialog.DropTables.Label", SWT.BORDER );
-    final Button wbDropLog = wDropTables.addButton( "TeraDataBulkLoaderDialog.LogTable.Label", SWT.CHECK );
-    final Button wbDropWork = wDropTables.addButton( "TeraDataBulkLoaderDialog.WorkTable.Label", SWT.CHECK );
-    final Button wbDropError = wDropTables.addButton( "TeraDataBulkLoaderDialog.ErrorTable.Label", SWT.CHECK );
-    final Button wbDropError2 = wDropTables.addButton( "TeraDataBulkLoaderDialog.ErrorTable2.Label", SWT.CHECK );
+    Group dropTablesBeforeLoadGroup = new Group( cGenScriptControlItems, SWT.SHADOW_NONE );
+    props.setLook( dropTablesBeforeLoadGroup );
+    dropTablesBeforeLoadGroup.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.DropTables.Label" ) );
+    dropTablesBeforeLoadGroup.setLayout( new FormLayout() );
+    FormData dropTablesBeforeLoadGroupData = new FormData();
+    dropTablesBeforeLoadGroupData.left = new FormAttachment( 0, margin );
+    dropTablesBeforeLoadGroupData.top = new FormAttachment( wScriptFile.getTextVar(), 2 * margin );
+    dropTablesBeforeLoadGroupData.right = new FormAttachment( 100, -margin );
+    dropTablesBeforeLoadGroup.setLayoutData( dropTablesBeforeLoadGroupData );
+    Composite dropTablesBeforeLoadComposite = new Composite( dropTablesBeforeLoadGroup, SWT.NONE );
+    props.setLook( dropTablesBeforeLoadComposite );
+    RowLayout dropTablesBeforeLoadLayout = new RowLayout();
+    dropTablesBeforeLoadLayout.spacing = Const.MARGIN;
+    dropTablesBeforeLoadComposite.setLayout( dropTablesBeforeLoadLayout );
+    FormData dropTablesBeforeLoadData = new FormData();
+    dropTablesBeforeLoadData.left = new FormAttachment( props.getMiddlePct(), 0 );
+    dropTablesBeforeLoadData.top = new FormAttachment( 0, 0 );
+    dropTablesBeforeLoadData.right = new FormAttachment( 100, 0 );
+    dropTablesBeforeLoadComposite.setLayoutData( dropTablesBeforeLoadData );
+    final Button wbDropLog =
+        createCheckbox( dropTablesBeforeLoadComposite, SWT.RIGHT, "TeraDataBulkLoaderDialog.LogTable.Label",
+            lsModSelect );
+    final Button wbDropWork =
+        createCheckbox( dropTablesBeforeLoadComposite, SWT.RIGHT, "TeraDataBulkLoaderDialog.WorkTable.Label",
+            lsModSelect );
+    final Button wbDropError =
+        createCheckbox( dropTablesBeforeLoadComposite, SWT.RIGHT, "TeraDataBulkLoaderDialog.ErrorTable.Label",
+            lsModSelect );
+    final Button wbDropError2 =
+        createCheckbox( dropTablesBeforeLoadComposite, SWT.RIGHT, "TeraDataBulkLoaderDialog.ErrorTable2.Label",
+            lsModSelect );
 
-    CompositeMenuItem wRowHandling =
-        new CompositeMenuItem( props, lsMod, lsModSelect, input, cGenScriptControlItems, wDropTables.getComposite(),
-            "TeraDataBulkLoaderDialog.RowHandling.Label", SWT.BORDER );
+    Group rowHandlingGroupWrapper = new Group( cGenScriptControlItems, SWT.SHADOW_NONE );
+    rowHandlingGroupWrapper.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.RowHandling.Label" ) );
+    props.setLook( rowHandlingGroupWrapper );
+    rowHandlingGroupWrapper.setLayout( new FormLayout() );
+    FormData rowHandlingGroupWrapperData = new FormData();
+    rowHandlingGroupWrapperData.left = new FormAttachment( 0, margin );
+    rowHandlingGroupWrapperData.top = new FormAttachment( dropTablesBeforeLoadGroup, margin );
+    rowHandlingGroupWrapperData.right = new FormAttachment( 100, -margin );
+    rowHandlingGroupWrapper.setLayoutData( rowHandlingGroupWrapperData );
+    Composite rowHandlingComposite = new Composite( rowHandlingGroupWrapper, SWT.NONE );
+    props.setLook( rowHandlingComposite );
+    RowLayout rowHandlingCompositeLayout = new RowLayout();
+    rowHandlingCompositeLayout.spacing = Const.MARGIN;
+    rowHandlingComposite.setLayout( rowHandlingCompositeLayout );
+    FormData rowHandlingCompositeLayoutData = new FormData();
+    rowHandlingCompositeLayoutData.left = new FormAttachment( props.getMiddlePct(), 0 );
+    rowHandlingCompositeLayoutData.top = new FormAttachment( 0, 0 );
+    rowHandlingCompositeLayoutData.right = new FormAttachment( 100, 0 );
+    rowHandlingComposite.setLayoutData( rowHandlingCompositeLayoutData );
     final Button wbIgnoreDupUpdate =
-        wRowHandling.addButton( "TeraDataBulkLoaderDialog.IgnoreDupUpdate.Label", SWT.CHECK );
+        createCheckbox( rowHandlingComposite, SWT.RIGHT, "TeraDataBulkLoaderDialog.IgnoreDupUpdate.Label", lsModSelect );
     final Button wbInsertMissingUpdate =
-        wRowHandling.addButton( "TeraDataBulkLoaderDialog.InsertMissingUpdate.Label", SWT.CHECK );
+        createCheckbox( rowHandlingComposite, SWT.RIGHT, "TeraDataBulkLoaderDialog.InsertMissingUpdate.Label",
+            lsModSelect );
     final Button wbIgnoreMissingUpdate =
-        wRowHandling.addButton( "TeraDataBulkLoaderDialog.IgnoreMissing.Label", SWT.CHECK );
+        createCheckbox( rowHandlingComposite, SWT.RIGHT, "TeraDataBulkLoaderDialog.IgnoreMissing.Label", lsModSelect );
+
+    Group logFilesGroup = new Group( cGenScriptControlItems, SWT.SHADOW_NONE );
+    props.setLook( logFilesGroup );
+    logFilesGroup.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.LogFiles.Label" ) );
+    FormLayout logFilesGroupLayout = new FormLayout();
+    logFilesGroupLayout.marginWidth = 10;
+    logFilesGroupLayout.marginHeight = 10;
+    logFilesGroup.setLayout( logFilesGroupLayout );
+    FormData logFilesGroupData = new FormData();
+    logFilesGroupData.left = new FormAttachment( 0, margin );
+    logFilesGroupData.top = new FormAttachment( rowHandlingGroupWrapper, 2 * margin );
+    logFilesGroupData.right = new FormAttachment( 100, -margin );
+    logFilesGroup.setLayoutData( logFilesGroupData );
 
     final TextVarMenuItem wAccessLogFile =
-        new FileTextVarMenuItem( shell, cGenScriptControlItems, props, transMeta, lsMod, wRowHandling,
+        new FileTextVarMenuItem( shell, logFilesGroup, props, transMeta, lsMod, rowHandlingComposite,
             "TeraDataBulkLoaderDialog.AccessLogFile.Label" );
     final TextVarMenuItem wUpdateLogFile =
-        new FileTextVarMenuItem( shell, cGenScriptControlItems, props, transMeta, lsMod, wAccessLogFile,
+        new FileTextVarMenuItem( shell, logFilesGroup, props, transMeta, lsMod, wAccessLogFile,
             "TeraDataBulkLoaderDialog.UpdateLogFile.Label" );
-    final TextVarMenuItem wScriptFile =
-        new NoButtonTextVarMenuItem( cGenScriptControlItems, props, transMeta, lsMod, wUpdateLogFile,
-            "TeraDataBulkLoaderDialog.ScriptFile.Label" );
     tiGenScriptControlItems.setControl( cGenScriptControlItems );
     cGenScriptControlItems.setLayout( new FormLayout() );
     dialogPopulators.add( new DialogPopulator() {
@@ -615,7 +680,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
         if ( ( val = input.getScriptFileName() ) != null ) {
           wScriptFile.setText( val );
         }
-        
+
         wbDropLog.setSelection( input.getDropLogTable() );
         wbDropWork.setSelection( input.getDropWorkTable() );
         wbDropError.setSelection( input.getDropErrorTable() );
@@ -760,7 +825,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
         } catch ( KettleException ke ) {
           new ErrorDialog( shell, BaseMessages
               .getString( PKG, "TeraDataBulkLoaderDialog.FailedToGetFields.DialogTitle" ), BaseMessages.getString( PKG,
-                "TeraDataBulkLoaderDialog.FailedToGetFields.DialogMessage" ), ke );
+              "TeraDataBulkLoaderDialog.FailedToGetFields.DialogMessage" ), ke );
         }
       }
     } );
@@ -1012,7 +1077,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     } catch ( KettleException e ) {
       new ErrorDialog( shell, BaseMessages.getString( PKG,
           "TeraDataBulkLoaderDialog.DoMapping.UnableToFindSourceFields.Title" ), BaseMessages.getString( PKG,
-            "TeraDataBulkLoaderDialog.DoMapping.UnableToFindSourceFields.Message" ), e );
+          "TeraDataBulkLoaderDialog.DoMapping.UnableToFindSourceFields.Message" ), e );
       return;
     }
     // refresh data
@@ -1025,7 +1090,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     } catch ( KettleException e ) {
       new ErrorDialog( shell, BaseMessages.getString( PKG,
           "TeraDataBulkLoaderDialog.DoMapping.UnableToFindTargetFields.Title" ), BaseMessages.getString( PKG,
-            "TeraDataBulkLoaderDialog.DoMapping.UnableToFindTargetFields.Message" ), e );
+          "TeraDataBulkLoaderDialog.DoMapping.UnableToFindTargetFields.Message" ), e );
       return;
     }
 
@@ -1217,7 +1282,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     final RequiredFieldsError errorPopup =
         new RequiredFieldsError( shell, BaseMessages.getString( PKG,
             "TeraDataBulkLoaderDialog.MissingRequiredTitle.DialogMessage" ), BaseMessages.getString( PKG,
-              "TeraDataBulkLoaderDialog.MissingRequiredMsg.DialogMessage" ) );
+            "TeraDataBulkLoaderDialog.MissingRequiredMsg.DialogMessage" ) );
 
     // Always required
     errorPopup.addIfUndef( wStepname, "TeraDataBulkLoaderDialog.MissingStepname.DialogMessage" );
