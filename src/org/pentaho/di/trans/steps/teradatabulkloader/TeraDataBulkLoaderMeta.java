@@ -59,7 +59,7 @@ import org.pentaho.di.core.annotations.Step;
  * Teradata TPT Insert Upsert Bulk Loader
  */
 
-@Step( id = "TeraDataBulkLoader", image = "TDTPTBL.png", name = "Teradata TPT Insert Upsert Bulk Loader",
+@Step( id = "TeraDataBulkLoader", image = "TDTPTBL.png", name = "Teradata TPT Bulk Loader",
     description = "Teradata TPT bulkloader, using tbuild command",
     categoryDescription = "i18n:org.pentaho.di.trans.step:BaseStep.Category.Bulk",
     documentationUrl = "http://wiki.pentaho.com/display/EAI/Teradata+TPT+Insert+Upsert+Bulk+Loader" )
