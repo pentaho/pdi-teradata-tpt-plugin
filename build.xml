@@ -8,7 +8,10 @@
   See common_build.xml for more details
 ============================================================================-->
 <project name="${plugin-id}" basedir="." default="default" xmlns:ivy="antlib:org.apache.ivy.ant">
-
+  <property name="bin.dir" value="${basedir}/bin" />
+  <property name="stage.dir" value="${bin.dir}/stage" />
+  <property name="approot.stage.dir.basename" value="teradata-tpt-bulk-loader" />
+  <property name="approot.stage.dir" value="${stage.dir}/${approot.stage.dir.basename}" />
 
   <description>
     This build file is used to create a Kettle plugin and works with the subfloor.xml file.

@@ -825,7 +825,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
         } catch ( KettleException ke ) {
           new ErrorDialog( shell, BaseMessages
               .getString( PKG, "TeraDataBulkLoaderDialog.FailedToGetFields.DialogTitle" ), BaseMessages.getString( PKG,
-              "TeraDataBulkLoaderDialog.FailedToGetFields.DialogMessage" ), ke );
+                "TeraDataBulkLoaderDialog.FailedToGetFields.DialogMessage" ), ke );
         }
       }
     } );
@@ -1077,7 +1077,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     } catch ( KettleException e ) {
       new ErrorDialog( shell, BaseMessages.getString( PKG,
           "TeraDataBulkLoaderDialog.DoMapping.UnableToFindSourceFields.Title" ), BaseMessages.getString( PKG,
-          "TeraDataBulkLoaderDialog.DoMapping.UnableToFindSourceFields.Message" ), e );
+            "TeraDataBulkLoaderDialog.DoMapping.UnableToFindSourceFields.Message" ), e );
       return;
     }
     // refresh data
@@ -1090,7 +1090,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     } catch ( KettleException e ) {
       new ErrorDialog( shell, BaseMessages.getString( PKG,
           "TeraDataBulkLoaderDialog.DoMapping.UnableToFindTargetFields.Title" ), BaseMessages.getString( PKG,
-          "TeraDataBulkLoaderDialog.DoMapping.UnableToFindTargetFields.Message" ), e );
+            "TeraDataBulkLoaderDialog.DoMapping.UnableToFindTargetFields.Message" ), e );
       return;
     }
 
@@ -1282,7 +1282,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     final RequiredFieldsError errorPopup =
         new RequiredFieldsError( shell, BaseMessages.getString( PKG,
             "TeraDataBulkLoaderDialog.MissingRequiredTitle.DialogMessage" ), BaseMessages.getString( PKG,
-            "TeraDataBulkLoaderDialog.MissingRequiredMsg.DialogMessage" ) );
+              "TeraDataBulkLoaderDialog.MissingRequiredMsg.DialogMessage" ) );
 
     // Always required
     errorPopup.addIfUndef( wStepname, "TeraDataBulkLoaderDialog.MissingStepname.DialogMessage" );
