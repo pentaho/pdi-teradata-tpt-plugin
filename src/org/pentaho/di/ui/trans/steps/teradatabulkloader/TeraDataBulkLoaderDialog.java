@@ -551,7 +551,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     Composite dropTablesBeforeLoadComposite = new Composite( dropTablesBeforeLoadGroup, SWT.NONE );
     props.setLook( dropTablesBeforeLoadComposite );
     RowLayout dropTablesBeforeLoadLayout = new RowLayout();
-    dropTablesBeforeLoadLayout.spacing = Const.MARGIN;
+    dropTablesBeforeLoadLayout.spacing = 10;
     dropTablesBeforeLoadComposite.setLayout( dropTablesBeforeLoadLayout );
     FormData dropTablesBeforeLoadData = new FormData();
     dropTablesBeforeLoadData.left = new FormAttachment( props.getMiddlePct(), 0 );
@@ -583,7 +583,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     Composite rowHandlingComposite = new Composite( rowHandlingGroupWrapper, SWT.NONE );
     props.setLook( rowHandlingComposite );
     RowLayout rowHandlingCompositeLayout = new RowLayout();
-    rowHandlingCompositeLayout.spacing = Const.MARGIN;
+    rowHandlingCompositeLayout.spacing = 10;
     rowHandlingComposite.setLayout( rowHandlingCompositeLayout );
     FormData rowHandlingCompositeLayoutData = new FormData();
     rowHandlingCompositeLayoutData.left = new FormAttachment( props.getMiddlePct(), 0 );
