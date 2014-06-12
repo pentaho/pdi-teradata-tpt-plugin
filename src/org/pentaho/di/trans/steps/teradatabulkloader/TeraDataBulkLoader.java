@@ -173,14 +173,15 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     try {
       // 1) Create the FIFO file using the "mkfifo" command...
       // Make sure to log all the possible output, also from STDERR
-      //
       data.fifoFilename = environmentSubstitute( meta.getFifoFileName() );
-      data.fifoFilename += "." + new Random().nextInt( 2139999999 );
+      if ( meta.isRandomizeFifoFilename() ) {
+        data.fifoFilename += "." + new Random().nextInt( 2139999999 );
+      }
+      setVariable( "TPT_FIFO_FILENAME", data.fifoFilename );
 
       File fifoFile = new File( data.fifoFilename );
       if ( !fifoFile.exists() ) {
         // MKFIFO!
-        //
         String mkFifoCmd = "mkfifo " + data.fifoFilename;
         logDetailed( BaseMessages.getString( PKG, "TeraDataBulkLoader.Log.CreatePipe", mkFifoCmd ) );
         Process mkFifoProcess = rt.exec( mkFifoCmd );

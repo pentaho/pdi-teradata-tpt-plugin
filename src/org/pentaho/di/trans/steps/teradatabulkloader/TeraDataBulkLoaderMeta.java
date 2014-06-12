@@ -23,14 +23,13 @@
 package org.pentaho.di.trans.steps.teradatabulkloader;
 
 import java.util.List;
-import java.util.Map;
 
 import org.pentaho.di.core.CheckResult;
 import org.pentaho.di.core.CheckResultInterface;
 import org.pentaho.di.core.Const;
-import org.pentaho.di.core.Counter;
 import org.pentaho.di.core.ProvidesDatabaseConnectionInformation;
 import org.pentaho.di.core.SQLStatement;
+import org.pentaho.di.core.annotations.Step;
 import org.pentaho.di.core.database.Database;
 import org.pentaho.di.core.database.DatabaseMeta;
 import org.pentaho.di.core.exception.KettleException;
@@ -52,8 +51,8 @@ import org.pentaho.di.trans.step.StepDataInterface;
 import org.pentaho.di.trans.step.StepInterface;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
+import org.pentaho.metastore.api.IMetaStore;
 import org.w3c.dom.Node;
-import org.pentaho.di.core.annotations.Step;
 
 /**
  * Teradata TPT Insert Upsert Bulk Loader
@@ -94,6 +93,48 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.FieldFormatType.Timestamp.Description" ),
     BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.FieldFormatType.Number.Description" ),
     BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.FieldFormatType.StringEscape.Description" ), };
+
+  public static final String CONNECTION_FIELD = "connection";
+  public static final String GENERATE_SCRIPT_FIELD = "generateScript";
+  public static final String TBUILD_PATH_FIELD = "tbuildPath";
+  public static final String TBUILD_LIB_PATH_FIELD = "tbuildLibPath";
+  public static final String LIB_PATH_FIELD = "libPath";
+  public static final String TDICU_LIB_PATH_FIELD = "tdicuLibPath";
+  public static final String COP_LIB_PATH_FIELD = "copLibPath";
+  public static final String TWB_ROOT_FIELD = "twbRoot";
+  public static final String INSTALL_PATH_FIELD = "installPath";
+  public static final String JOB_NAME_FIELD = "jobName";
+
+  public static final String SCHEMA_FIELD = "schema";
+  public static final String TABLE_FIELD = "table";
+  public static final String LOG_TABLE_FIELD = "logTable";
+  public static final String WORK_TABLE_FIELD = "workTable";
+  public static final String ERROR_TABLE_FIELD = "errorTable";
+  public static final String ERROR_TABLE_2_FIELD = "errorTable2";
+  public static final String DROP_LOG_TABLE_FIELD = "dropLogTable";
+  public static final String DROP_WORK_TABLE_FIELD = "dropWorkTable";
+  public static final String DROP_ERROR_TABLE_FIELD = "dropErrorTable";
+  public static final String DROP_ERROR_TABLE_2_FIELD = "dropErrorTable2";
+  public static final String IGNORE_DUP_UPDATE_FIELD = "ignoreDupUpdate";
+  public static final String INSERT_MISSING_UPDATE_FIELD = "insertMissingUpdate";
+  public static final String IGNORE_MISSING_UPDATE_FIELD = "ignoreMissingUpdate";
+  public static final String ACCESS_LOG_FILE_FIELD = "accessLogFile";
+  public static final String UPDATE_LOG_FILE_FIELD = "updateLogFile";
+  public static final String FIFO_FILE_NAME_FIELD = "fifoFileName";
+  public static final String RANDOMIZE_FIFO_FILE_NAME_FIELD = "randomizeFifoFilename";
+  public static final String SCRIPT_FILE_NAME_FIELD = "scriptFileName";
+  public static final String ACTION_TYPE_FIELD = "actionType";
+  public static final String KEY_STREAM_FIELD = "keyStream";
+  public static final String KEY_LOOKUP_FIELD = "keyLookup";
+  public static final String KEY_CONDITION_FIELD = "keyCondition";
+  public static final String FIELD_TABLE_FIELD = "fieldTable";
+  public static final String FIELD_STREAM_FIELD = "fieldStream";
+  public static final String FIELD_UPDATE_FIELD = "fieldUpdate";
+
+  public static final String EXISTING_SCRIPT_FILE_FIELD = "existingScriptFile";
+  public static final String SUBSTITUTE_SCRIPT_FILE_FIELD = "substituteScriptFile";
+  public static final String EXISTING_VARIABLE_FILE_FIELD = "existingVariableFile";
+  public static final String SUBSTITUTE_VARIABLE_FILE_FIELD = "substituteVariableFile";
 
   /** The my step. */
   private TeraDataBulkLoader myStep;
@@ -143,6 +184,8 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   /* Dialog populated variables - generate script */
   /** The fifo file name. */
   private String fifoFileName = null;
+
+  private boolean randomizeFifoFilename = false;
 
   /** The script file name. */
   private String scriptFileName = null;
@@ -195,19 +238,19 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
   /** The action type. */
   private int actionType = 0; // Insert, Upsert - index into TeraDataBulkLoader.ActionTypes[]
 
-  /**  Field name of the target table. */
+  /** Field name of the target table. */
   private String[] fieldTable = null;
 
-  /**  Field name in the stream. */
+  /** Field name in the stream. */
   private String[] fieldStream = null;
 
   /** The field update. */
   private Boolean[] fieldUpdate = null;
 
-  /**  which field in input stream to compare with?. */
+  /** which field in input stream to compare with?. */
   private String[] keyStream = null;
 
-  /**  field in table. */
+  /** field in table. */
   private String[] keyLookup = null;
 
   /** Comparator: =, <>, BETWEEN, ... */
@@ -222,7 +265,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the database meta.
-   *
+   * 
    * @return Returns the database.
    */
   @Override
@@ -232,7 +275,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the step.
-   *
+   * 
    * @return the step
    */
   public TeraDataBulkLoader getStep() {
@@ -241,8 +284,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the generate script.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the boolean
    */
   public boolean setGenerateScript( boolean val ) {
@@ -251,7 +295,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the generate script.
-   *
+   * 
    * @return the generate script
    */
   public boolean getGenerateScript() {
@@ -260,8 +304,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the substitute control file.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the boolean
    */
   public boolean setSubstituteControlFile( boolean val ) {
@@ -270,7 +315,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the substitute control file.
-   *
+   * 
    * @return the substitute control file
    */
   public boolean getSubstituteControlFile() {
@@ -279,8 +324,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the existing script file.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the string
    */
   public String setExistingScriptFile( String val ) {
@@ -289,7 +335,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the existing script file.
-   *
+   * 
    * @return the existing script file
    */
   public String getExistingScriptFile() {
@@ -298,8 +344,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the job name.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the string
    */
   public String setJobName( String val ) {
@@ -308,7 +355,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the job name.
-   *
+   * 
    * @return the job name
    */
   public String getJobName() {
@@ -317,7 +364,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the variable file.
-   *
+   * 
    * @return the variable file
    */
   public String getVariableFile() {
@@ -326,8 +373,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the variable file.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the string
    */
   public String setVariableFile( String val ) {
@@ -336,7 +384,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the drop log table.
-   *
+   * 
    * @return the drop log table
    */
   public boolean getDropLogTable() {
@@ -345,8 +393,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the drop log table.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the boolean
    */
   public boolean setDropLogTable( boolean val ) {
@@ -355,7 +404,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the drop work table.
-   *
+   * 
    * @return the drop work table
    */
   public boolean getDropWorkTable() {
@@ -364,8 +413,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the drop work table.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the boolean
    */
   public boolean setDropWorkTable( boolean val ) {
@@ -374,7 +424,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the drop error table.
-   *
+   * 
    * @return the drop error table
    */
   public boolean getDropErrorTable() {
@@ -383,8 +433,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the drop error table.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the boolean
    */
   public boolean setDropErrorTable( boolean val ) {
@@ -393,7 +444,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the drop error table2.
-   *
+   * 
    * @return the drop error table2
    */
   public boolean getDropErrorTable2() {
@@ -402,8 +453,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the drop error table2.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the boolean
    */
   public boolean setDropErrorTable2( boolean val ) {
@@ -412,7 +464,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the ignore dup update.
-   *
+   * 
    * @return the ignore dup update
    */
   public boolean getIgnoreDupUpdate() {
@@ -421,8 +473,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the ignore dup update.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the boolean
    */
   public boolean setIgnoreDupUpdate( boolean val ) {
@@ -431,7 +484,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the insert missing update.
-   *
+   * 
    * @return the insert missing update
    */
   public boolean getInsertMissingUpdate() {
@@ -440,8 +493,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the insert missing update.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the boolean
    */
   public boolean setInsertMissingUpdate( boolean val ) {
@@ -450,7 +504,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the ignore missing update.
-   *
+   * 
    * @return the ignore missing update
    */
   public boolean getIgnoreMissingUpdate() {
@@ -459,8 +513,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the ignore missing update.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the boolean
    */
   public boolean setIgnoreMissingUpdate( boolean val ) {
@@ -469,7 +524,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the substitute variable file.
-   *
+   * 
    * @return the substitute variable file
    */
   public boolean getSubstituteVariableFile() {
@@ -478,8 +533,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the substitute variable file.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the boolean
    */
   public boolean setSubstituteVariableFile( boolean val ) {
@@ -488,8 +544,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the tbuild path.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the string
    */
   public String setTbuildPath( String val ) {
@@ -498,7 +555,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the td install path.
-   *
+   * 
    * @return the td install path
    */
   public String getTdInstallPath() {
@@ -507,7 +564,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the tbuild path.
-   *
+   * 
    * @return the tbuild path
    */
   public String getTbuildPath() {
@@ -516,7 +573,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the tbuild lib path.
-   *
+   * 
    * @return the tbuild lib path
    */
   public String getTbuildLibPath() {
@@ -525,7 +582,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the lib path.
-   *
+   * 
    * @return the lib path
    */
   public String getLibPath() {
@@ -534,7 +591,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the cop lib path.
-   *
+   * 
    * @return the cop lib path
    */
   public String getCopLibPath() {
@@ -543,7 +600,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the tdicu lib path.
-   *
+   * 
    * @return the tdicu lib path
    */
   public String getTdicuLibPath() {
@@ -552,7 +609,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the twb root.
-   *
+   * 
    * @return the twb root
    */
   public String getTwbRoot() {
@@ -561,8 +618,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the tbuild lib path.
-   *
-   * @param s the s
+   * 
+   * @param s
+   *          the s
    * @return the string
    */
   public String setTbuildLibPath( String s ) {
@@ -571,8 +629,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the lib path.
-   *
-   * @param s the s
+   * 
+   * @param s
+   *          the s
    * @return the string
    */
   public String setLibPath( String s ) {
@@ -581,8 +640,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the cop lib path.
-   *
-   * @param s the s
+   * 
+   * @param s
+   *          the s
    * @return the string
    */
   public String setCopLibPath( String s ) {
@@ -591,8 +651,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the tdicu lib path.
-   *
-   * @param s the s
+   * 
+   * @param s
+   *          the s
    * @return the string
    */
   public String setTdicuLibPath( String s ) {
@@ -601,8 +662,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the td install path.
-   *
-   * @param s the s
+   * 
+   * @param s
+   *          the s
    * @return the string
    */
   public String setTdInstallPath( String s ) {
@@ -611,8 +673,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the twb root.
-   *
-   * @param s the s
+   * 
+   * @param s
+   *          the s
    * @return the string
    */
   public String setTwbRoot( String s ) {
@@ -621,8 +684,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the fifo file name.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the string
    */
   public String setFifoFileName( String val ) {
@@ -631,17 +695,26 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the fifo file name.
-   *
+   * 
    * @return the fifo file name
    */
   public String getFifoFileName() {
     return this.fifoFileName;
   }
 
+  public boolean isRandomizeFifoFilename() {
+    return randomizeFifoFilename;
+  }
+
+  public void setRandomizeFifoFilename( boolean randomizeFifoFilename ) {
+    this.randomizeFifoFilename = randomizeFifoFilename;
+  }
+
   /**
    * Sets the script file name.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the string
    */
   public String setScriptFileName( String val ) {
@@ -650,7 +723,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the script file name.
-   *
+   * 
    * @return the script file name
    */
   public String getScriptFileName() {
@@ -659,14 +732,16 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the db name.
-   *
+   * 
    * @return the db name
    */
   public String getDbName() {
     return this.databaseMeta.getDatabaseInterface().getDatabaseName();
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.pentaho.di.core.ProvidesDatabaseConnectionInformation#getSchemaName()
    */
   @Override
@@ -676,8 +751,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the schema name.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the string
    */
   public String setSchemaName( String val ) {
@@ -686,7 +762,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the log table.
-   *
+   * 
    * @return the log table
    */
   public String getLogTable() {
@@ -695,8 +771,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the log table.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the string
    */
   public String setLogTable( String val ) {
@@ -705,7 +782,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the work table.
-   *
+   * 
    * @return the work table
    */
   public String getWorkTable() {
@@ -714,8 +791,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the work table.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the string
    */
   public String setWorkTable( String val ) {
@@ -724,7 +802,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the error table.
-   *
+   * 
    * @return the error table
    */
   public String getErrorTable() {
@@ -733,8 +811,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the error table.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the string
    */
   public String setErrorTable( String val ) {
@@ -743,7 +822,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the error table2.
-   *
+   * 
    * @return the error table2
    */
   public String getErrorTable2() {
@@ -752,8 +831,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the error table2.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the string
    */
   public String setErrorTable2( String val ) {
@@ -762,7 +842,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the access log file.
-   *
+   * 
    * @return the access log file
    */
   public String getAccessLogFile() {
@@ -771,8 +851,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the access log file.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the string
    */
   public String setAccessLogFile( String val ) {
@@ -781,7 +862,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the update log file.
-   *
+   * 
    * @return the update log file
    */
   public String getUpdateLogFile() {
@@ -790,8 +871,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the update log file.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the string
    */
   public String setUpdateLogFile( String val ) {
@@ -800,7 +882,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the action type.
-   *
+   * 
    * @return the action type
    */
   public int getActionType() {
@@ -809,8 +891,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the action type.
-   *
-   * @param val the val
+   * 
+   * @param val
+   *          the val
    * @return the int
    */
   public int setActionType( int val ) {
@@ -819,14 +902,17 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the database meta.
-   *
-   * @param database the new database meta
+   * 
+   * @param database
+   *          the new database meta
    */
   public void setDatabaseMeta( DatabaseMeta database ) {
     this.databaseMeta = database;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.pentaho.di.core.ProvidesDatabaseConnectionInformation#getTableName()
    */
   @Override
@@ -836,8 +922,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the table name.
-   *
-   * @param tableName the new table name
+   * 
+   * @param tableName
+   *          the new table name
    */
   public void setTableName( String tableName ) {
     this.tableName = tableName;
@@ -845,7 +932,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the field table.
-   *
+   * 
    * @return the field table
    */
   public String[] getFieldTable() {
@@ -854,8 +941,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the field table.
-   *
-   * @param fieldTable the new field table
+   * 
+   * @param fieldTable
+   *          the new field table
    */
   public void setFieldTable( String[] fieldTable ) {
     this.fieldTable = fieldTable;
@@ -863,7 +951,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the field stream.
-   *
+   * 
    * @return the field stream
    */
   public String[] getFieldStream() {
@@ -872,8 +960,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the field stream.
-   *
-   * @param fieldStream the new field stream
+   * 
+   * @param fieldStream
+   *          the new field stream
    */
   public void setFieldStream( String[] fieldStream ) {
     this.fieldStream = fieldStream;
@@ -881,7 +970,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the field update.
-   *
+   * 
    * @return the field update
    */
   public Boolean[] getFieldUpdate() {
@@ -890,8 +979,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the field update.
-   *
-   * @param fieldUpdate the new field update
+   * 
+   * @param fieldUpdate
+   *          the new field update
    */
   public void setFieldUpdate( Boolean[] fieldUpdate ) {
     this.fieldUpdate = fieldUpdate;
@@ -899,7 +989,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the key stream.
-   *
+   * 
    * @return the key stream
    */
   public String[] getKeyStream() {
@@ -908,8 +998,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the key stream.
-   *
-   * @param fieldStream the new key stream
+   * 
+   * @param fieldStream
+   *          the new key stream
    */
   public void setKeyStream( String[] fieldStream ) {
     this.keyStream = fieldStream;
@@ -917,7 +1008,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the key lookup.
-   *
+   * 
    * @return the key lookup
    */
   public String[] getKeyLookup() {
@@ -926,8 +1017,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the key lookup.
-   *
-   * @param fieldStream the new key lookup
+   * 
+   * @param fieldStream
+   *          the new key lookup
    */
   public void setKeyLookup( String[] fieldStream ) {
     this.keyLookup = fieldStream;
@@ -935,7 +1027,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the key condition.
-   *
+   * 
    * @return the key condition
    */
   public String[] getKeyCondition() {
@@ -944,27 +1036,31 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Sets the key condition.
-   *
-   * @param fieldStream the new key condition
+   * 
+   * @param fieldStream
+   *          the new key condition
    */
   public void setKeyCondition( String[] fieldStream ) {
     this.keyCondition = fieldStream;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.pentaho.di.trans.step.BaseStepMeta#loadXML(org.w3c.dom.Node, java.util.List, java.util.Map)
    */
   @Override
-  public void loadXML( Node stepnode, List<DatabaseMeta> databases, Map<String, Counter> arg2 )
-    throws KettleXMLException {
+  public void loadXML( Node stepnode, List<DatabaseMeta> databases, IMetaStore metaStore ) throws KettleXMLException {
     readData( stepnode, databases );
   }
 
   /**
    * Allocate.
-   *
-   * @param nrkeys the nrkeys
-   * @param nrvalues the nrvalues
+   * 
+   * @param nrkeys
+   *          the nrkeys
+   * @param nrvalues
+   *          the nrvalues
    */
   public void allocate( int nrkeys, int nrvalues ) {
     keyStream = new String[nrkeys];
@@ -975,7 +1071,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     fieldUpdate = new Boolean[nrvalues];
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.pentaho.di.trans.step.BaseStepMeta#clone()
    */
   @Override
@@ -1002,10 +1100,13 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Read data.
-   *
-   * @param stepnode the stepnode
-   * @param databases the databases
-   * @throws KettleXMLException the kettle xml exception
+   * 
+   * @param stepnode
+   *          the stepnode
+   * @param databases
+   *          the databases
+   * @throws KettleXMLException
+   *           the kettle xml exception
    */
   private void readData( Node stepnode, List<? extends SharedObjectInterface> databases ) throws KettleXMLException {
     try {
@@ -1042,6 +1143,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
       accessLogFile = XMLHandler.getTagValue( stepnode, "accessLogFile" );
       updateLogFile = XMLHandler.getTagValue( stepnode, "updateLogFile" );
       fifoFileName = XMLHandler.getTagValue( stepnode, "fifoFileName" );
+      randomizeFifoFilename = "Y".equalsIgnoreCase( XMLHandler.getTagValue( stepnode, RANDOMIZE_FIFO_FILE_NAME_FIELD ) );
       scriptFileName = XMLHandler.getTagValue( stepnode, "scriptFileName" );
       String sactionType = XMLHandler.getTagValue( stepnode, "actionType" );
       if ( sactionType != null ) {
@@ -1095,7 +1197,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     }
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.pentaho.di.trans.step.StepMetaInterface#setDefault()
    */
   @Override
@@ -1106,7 +1210,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     allocate( 0, 0 );
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.pentaho.di.trans.step.BaseStepMeta#getXML()
    */
   @Override
@@ -1143,6 +1249,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     retval.append( "    " ).append( XMLHandler.addTagValue( "accessLogFile", accessLogFile ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "updateLogFile", updateLogFile ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "fifoFileName", fifoFileName ) );
+    retval.append( "    " ).append( XMLHandler.addTagValue( RANDOMIZE_FIFO_FILE_NAME_FIELD, randomizeFifoFilename ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "scriptFileName", scriptFileName ) );
     retval.append( "    " ).append( XMLHandler.addTagValue( "actionType", actionType ) );
 
@@ -1177,7 +1284,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    * Read step metadata from repository
    */
   @Override
-  public void readRep( Repository rep, ObjectId id_step, List<DatabaseMeta> databases, Map<String, Counter> arg3 )
+  public void readRep( Repository rep, IMetaStore metaStore, ObjectId id_step, List<DatabaseMeta> databases )
     throws KettleException {
 
     try {
@@ -1214,6 +1321,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
       installPath = rep.getStepAttributeString( id_step, "installPath" );
       jobName = rep.getStepAttributeString( id_step, "jobName" );
       fifoFileName = rep.getStepAttributeString( id_step, "fifoFileName" );
+      randomizeFifoFilename = rep.getStepAttributeBoolean( id_step, RANDOMIZE_FIFO_FILE_NAME_FIELD );
 
       schemaName = rep.getStepAttributeString( id_step, "schema" );
       tableName = rep.getStepAttributeString( id_step, "table" );
@@ -1247,7 +1355,8 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
    * Save step metadata to repository
    */
   @Override
-  public void saveRep( Repository rep, ObjectId id_transformation, ObjectId id_step ) throws KettleException {
+  public void saveRep( Repository rep, IMetaStore metaStore, ObjectId id_transformation, ObjectId id_step )
+    throws KettleException {
 
     // 4.x compatibility
 
@@ -1280,6 +1389,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
       rep.saveStepAttribute( id_transformation, id_step, "installPath", installPath );
       rep.saveStepAttribute( id_transformation, id_step, "jobName", jobName );
       rep.saveStepAttribute( id_transformation, id_step, "fifoFileName", fifoFileName );
+      rep.saveStepAttribute( id_transformation, id_step, RANDOMIZE_FIFO_FILE_NAME_FIELD, randomizeFifoFilename );
 
       rep.saveStepAttribute( id_transformation, id_step, "schema", schemaName );
       rep.saveStepAttribute( id_transformation, id_step, "table", tableName );
@@ -1450,13 +1560,18 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the SQL statements.
-   *
-   * @param transMeta the trans meta
-   * @param stepMeta the step meta
-   * @param prev the prev
-   * @param repository the repository
+   * 
+   * @param transMeta
+   *          the trans meta
+   * @param stepMeta
+   *          the step meta
+   * @param prev
+   *          the prev
+   * @param repository
+   *          the repository
    * @return the SQL statements
-   * @throws KettleStepException the kettle step exception
+   * @throws KettleStepException
+   *           the kettle step exception
    */
   public SQLStatement getSQLStatements( TransMeta transMeta, StepMeta stepMeta, RowMetaInterface prev,
       Repository repository ) throws KettleStepException {
@@ -1524,7 +1639,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     return myStep;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.pentaho.di.trans.step.StepMetaInterface#getStepData()
    */
   @Override
@@ -1532,7 +1649,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     return new TeraDataBulkLoaderData();
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.pentaho.di.trans.step.BaseStepMeta#getUsedDatabaseConnections()
    */
   @Override
@@ -1544,7 +1663,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     }
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.pentaho.di.trans.step.BaseStepMeta#getRequiredFields(org.pentaho.di.core.variables.VariableSpace)
    */
   @Override
@@ -1564,12 +1685,10 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
             RowMetaInterface rv = db.getTableFields( schemaTable );
             return rv;
           } else {
-            throw new KettleException(
-              BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.Exception.TableNotFound" ) );
+            throw new KettleException( BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.Exception.TableNotFound" ) );
           }
         } else {
-          throw new KettleException(
-              BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.Exception.TableNotSpecified" ) );
+          throw new KettleException( BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.Exception.TableNotSpecified" ) );
         }
       } catch ( Exception e ) {
         throw new KettleException(
@@ -1578,15 +1697,14 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
         db.disconnect();
       }
     } else {
-      throw new KettleException(
-          BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.Exception.ConnectionNotDefined" ) );
+      throw new KettleException( BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.Exception.ConnectionNotDefined" ) );
     }
 
   }
 
   /**
    * Gets the field format type codes.
-   *
+   * 
    * @return the schemaName
    */
 
@@ -1596,7 +1714,7 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the field format type descriptions.
-   *
+   * 
    * @return the field format type descriptions
    */
   public static String[] getFieldFormatTypeDescriptions() {
@@ -1605,8 +1723,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the field format type code.
-   *
-   * @param type the type
+   * 
+   * @param type
+   *          the type
    * @return the field format type code
    */
   public static String getFieldFormatTypeCode( int type ) {
@@ -1615,8 +1734,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the field format type description.
-   *
-   * @param type the type
+   * 
+   * @param type
+   *          the type
    * @return the field format type description
    */
   public static String getFieldFormatTypeDescription( int type ) {
@@ -1625,8 +1745,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
 
   /**
    * Gets the field format type.
-   *
-   * @param codeOrDescription the code or description
+   * 
+   * @param codeOrDescription
+   *          the code or description
    * @return the field format type
    */
   public static int getFieldFormatType( String codeOrDescription ) {
@@ -1643,7 +1764,9 @@ public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInte
     return FIELD_FORMAT_TYPE_OK;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.pentaho.di.core.ProvidesDatabaseConnectionInformation#getMissingDatabaseConnectionInformationMessage()
    */
   @Override
