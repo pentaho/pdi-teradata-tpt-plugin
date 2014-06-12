@@ -988,7 +988,8 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
         new CompositeMenuItem( props, lsMod, lsModSelect, input, cUseScriptItems, wControlFile,
             "TeraDataBulkLoaderDialog.SubstituteControlFile.Label", 0 );
     final Button wbSubstituteControlFile = wSubstituteControlFile.addButton( "", SWT.CHECK );
-    wSubstituteControlFile.addLabel( "TeraDataBulkLoaderDialog.DataFileRandomizeVariable.Label" );
+    wSubstituteControlFile.addLabel( "TeraDataBulkLoaderDialog.DataFileRandomizeVariable.Label" ).setForeground(
+        GUIResource.getInstance().getColorOrange() );
 
     final TextVarMenuItem wVariableFile =
         new FileTextVarMenuItem( shell, cUseScriptItems, props, transMeta, lsMod, wSubstituteControlFile,
