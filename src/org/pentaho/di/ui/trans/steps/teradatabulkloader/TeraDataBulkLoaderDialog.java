@@ -416,8 +416,14 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     final TextVarMenuItem wDataFile =
         new NoButtonTextVarMenuItem( otherGroup, props, transMeta, lsMod, wTbuildPath,
             "TeraDataBulkLoaderDialog.DataFile.Label" );
+
+    CompositeMenuItem wRandomizeFifoName =
+        new CompositeMenuItem( props, lsMod, lsModSelect, input, otherGroup, wDataFile.getTextVar(),
+            "TeraDataBulkLoaderDialog.DataFileRandomize.Label", 0 );
+    final Button randomizeFifoName = wRandomizeFifoName.addButton( "", SWT.CHECK );
+
     final TextVarMenuItem wJobName =
-        new NoButtonTextVarMenuItem( otherGroup, props, transMeta, lsMod, wDataFile,
+        new NoButtonTextVarMenuItem( otherGroup, props, transMeta, lsMod, wRandomizeFifoName,
             "TeraDataBulkLoaderDialog.JobName.Label" );
 
     cExecutionItems.setLayout( new FormLayout() );
@@ -445,6 +451,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
         inf.setTbuildPath( wTbuildPath.getText() );
         inf.setFifoFileName( wDataFile.getText() );
         inf.setJobName( wJobName.getText() );
+        inf.setRandomizeFifoFilename( randomizeFifoName.getSelection() );
       }
 
       @Override
@@ -477,6 +484,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
         if ( ( val = input.getJobName() ) != null ) {
           wJobName.setText( val );
         }
+        randomizeFifoName.setSelection( input.isRandomizeFifoFilename() );
       }
     } );
     return tiExecutionItems;
@@ -980,6 +988,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
         new CompositeMenuItem( props, lsMod, lsModSelect, input, cUseScriptItems, wControlFile,
             "TeraDataBulkLoaderDialog.SubstituteControlFile.Label", 0 );
     final Button wbSubstituteControlFile = wSubstituteControlFile.addButton( "", SWT.CHECK );
+    wSubstituteControlFile.addLabel( "TeraDataBulkLoaderDialog.DataFileRandomizeVariable.Label" );
 
     final TextVarMenuItem wVariableFile =
         new FileTextVarMenuItem( shell, cUseScriptItems, props, transMeta, lsMod, wSubstituteControlFile,
