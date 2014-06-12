@@ -230,6 +230,14 @@ class CompositeMenuItem {
     return rc;
   }
 
+  public Label addLabel( String label ) {
+    Label lbl = new Label( composite, SWT.LEFT );
+    lbl.setText( BaseMessages.getString( TeraDataBulkLoaderDialog.PKG, label ) );
+    props.setLook( lbl );
+    add( lbl );
+    return lbl;
+  }
+
   /**
    * Sets the visible.
    * 
@@ -241,4 +249,3 @@ class CompositeMenuItem {
     composite.setVisible( b );
   }
 }
-
