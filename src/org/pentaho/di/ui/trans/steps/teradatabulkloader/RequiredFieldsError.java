@@ -73,7 +73,7 @@ class RequiredFieldsError {
    *          the s
    */
   public void addMessage( String s ) {
-    messages.append( s + "\n" );
+    messages.append( " - " + s + "\n" );
     msgcount++;
   }
 
