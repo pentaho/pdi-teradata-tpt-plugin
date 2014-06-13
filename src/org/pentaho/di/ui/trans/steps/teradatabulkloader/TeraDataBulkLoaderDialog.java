@@ -317,8 +317,9 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     } );
 
     // Set the shell size, based upon previous time...
-    setSize();
     getData();
+    fItemSet.pack();
+    setSize();
     input.setChanged( changed );
     shell.open();
 
@@ -354,7 +355,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     return new InputFields( inputFields, inputFieldType, inputFieldLength );
   }
 
-  private CTabItem createExecutionTab() {
+  private GeneralTabWidgets createExecutionTab() {
     CTabItem tiExecutionItems = new CTabItem( fItemSet, SWT.NONE );
     Composite cExecutionItems = new Composite( fItemSet, SWT.BORDER );
     props.setLook( cExecutionItems );
@@ -436,7 +437,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 
       @Override
       public void validate( List<String> errors ) {
-        addIfVoid( errors, Const.isEmpty( wTdInstall.getText() ),
+        addIfTrue( errors, Const.isEmpty( wTdInstall.getText() ),
             "TeraDataBulkLoaderDialog.MissingInstallPath.DialogMessage" );
       }
 
@@ -487,7 +488,7 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
         randomizeFifoName.setSelection( input.isRandomizeFifoFilename() );
       }
     } );
-    return tiExecutionItems;
+    return new GeneralTabWidgets( tiExecutionItems, randomizeFifoName );
   }
 
   private Button createCheckbox( Composite parent, int style, String label, Listener listener ) {
@@ -631,10 +632,10 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 
       @Override
       public void validate( List<String> errors ) {
-        addIfVoid( errors, Const.isEmpty( wSchema.getText() ), "TeraDataBulkLoaderDialog.MissingSchema.DialogMessage" );
-        addIfVoid( errors, Const.isEmpty( wTable.getText() ),
+        addIfTrue( errors, Const.isEmpty( wSchema.getText() ), "TeraDataBulkLoaderDialog.MissingSchema.DialogMessage" );
+        addIfTrue( errors, Const.isEmpty( wTable.getText() ),
             "TeraDataBulkLoaderDialog.MissingTargetTable.DialogMessage" );
-        addIfVoid( errors, Const.isEmpty( wLogTable.getText() ),
+        addIfTrue( errors, Const.isEmpty( wLogTable.getText() ),
             "TeraDataBulkLoaderDialog.MissingLogTable.DialogMessage" );
       }
 
@@ -972,8 +973,8 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     setTableFieldCombo.run();
   }
 
-  private void createUseScriptItemsTab() {
-    CTabItem tiUseScriptItems = new CTabItem( fItemSet, SWT.NONE );
+  private void createUseScriptItemsTab( final GeneralTabWidgets generalTabWidgets ) {
+    final CTabItem tiUseScriptItems = new CTabItem( fItemSet, SWT.NONE );
     tiUseScriptItems.setText( BaseMessages.getString( PKG, "TeraDataBulkLoaderDialog.ScriptTab.Label" ) );
     Composite cUseScriptItems = new Composite( fItemSet, SWT.BORDER );
 
@@ -1012,8 +1013,14 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
 
       @Override
       public void validate( List<String> errors ) {
-        addIfVoid( errors, Const.isEmpty( wControlFile.getText() ),
+        addIfTrue( errors, Const.isEmpty( wControlFile.getText() ),
             "TeraDataBulkLoaderDialog.MissingControlFile.DialogMessage" );
+        boolean fifoBadState =
+            generalTabWidgets.getRandomizeFifoButton().getSelection() && !wbSubstituteControlFile.getSelection();
+        addIfTrue( errors, fifoBadState, "TeraDataBulkLoaderDialog.FIFOState.DialogMessage" );
+        if ( fifoBadState ) {
+          fItemSet.setSelection( tiUseScriptItems );
+        }
       }
 
       @Override
@@ -1062,13 +1069,13 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
       tab.getControl().dispose();
       tab.dispose();
     }
-    CTabItem tiExecutionItems = createExecutionTab();
+    GeneralTabWidgets tiExecutionItems = createExecutionTab();
     if ( generated ) {
       createGenScriptTabs();
     } else {
-      createUseScriptItemsTab();
+      createUseScriptItemsTab( tiExecutionItems );
     }
-    fItemSet.setSelection( tiExecutionItems );
+    fItemSet.setSelection( tiExecutionItems.getTab() );
   }
 
   /**
@@ -1279,8 +1286,8 @@ public class TeraDataBulkLoaderDialog extends BaseStepDialog implements StepDial
     stepname = wStepname.getText(); // return value
   }
 
-  private <T> void addIfVoid( List<String> list, boolean isVoid, String message ) {
-    if ( isVoid ) {
+  private <T> void addIfTrue( List<String> list, boolean condition, String message ) {
+    if ( condition ) {
       list.add( BaseMessages.getString( PKG, message ) );
     }
   }
