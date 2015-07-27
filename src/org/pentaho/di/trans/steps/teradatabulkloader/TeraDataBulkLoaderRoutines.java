@@ -44,7 +44,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs.FileObject;
-import org.mvel2.util.StringAppender;
 import org.pentaho.di.core.Const;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleValueException;
@@ -92,7 +91,7 @@ public class TeraDataBulkLoaderRoutines {
    * @return the string
    */
   private String createInsertCommand() {
-    StringAppender cmd = new StringAppender();
+    StringBuffer cmd = new StringBuffer();
     cmd.append( " INSERT INTO " + this.meta.getDbName() + '.' + this.meta.getTableName() + "\n" );
     cmd.append( "   (\n" );
     String[] fieldTable = this.meta.getFieldTable();
@@ -125,8 +124,8 @@ public class TeraDataBulkLoaderRoutines {
    * @return the string
    */
   private String createUpsertCommand() {
-    StringAppender updatecmd = new StringAppender();
-    StringAppender insertcmd = new StringAppender();
+    StringBuffer updatecmd = new StringBuffer();
+    StringBuffer insertcmd = new StringBuffer();
 
     updatecmd.append( " UPDATE " + this.meta.getDbName() + '.' + this.meta.getTableName() + " SET\n" );
     String[] fieldTable = this.meta.getFieldTable();
@@ -135,7 +134,7 @@ public class TeraDataBulkLoaderRoutines {
 
     // Do the where clause first so that any where columns can be filtered out of the update
     Map<String, Boolean> usedAsKey = new HashMap<String, Boolean>();
-    StringAppender whereClause = new StringAppender();
+    StringBuffer whereClause = new StringBuffer();
     for ( int i = 0; i < this.meta.getKeyStream().length; i++ ) {
       whereClause.append( "        " + ( i == 0 ? "WHERE " : "AND" ) + " " );
       whereClause.append( this.meta.getKeyLookup()[i] + " " + this.meta.getKeyCondition()[i] + " :"
@@ -170,7 +169,7 @@ public class TeraDataBulkLoaderRoutines {
    * @return the string
    */
   private String createStep( String label, String code, String operator ) {
-    StringAppender cmd = new StringAppender( "STEP " + label + "(\n" + code + "\n" );
+    StringBuffer cmd = new StringBuffer( "STEP " + label + "(\n" + code + "\n" );
     if ( operator != null ) {
       cmd.append( operator );
     }
@@ -206,7 +205,7 @@ public class TeraDataBulkLoaderRoutines {
    * @return the string
    */
   private String toSelectOperator( String toOp, String selOp ) {
-    StringAppender cmd = new StringAppender( toOperator( toOp ) + "\n" );
+    StringBuffer cmd = new StringBuffer( toOperator( toOp ) + "\n" );
     if ( selOp != null ) {
       cmd.append( selectOperator( selOp ) );
     }
@@ -264,7 +263,7 @@ public class TeraDataBulkLoaderRoutines {
      */
     @Override
     public String toString() {
-      StringAppender cmd = new StringAppender( "APPLY \n" );
+      StringBuffer cmd = new StringBuffer( "APPLY \n" );
       for ( int i = 0; i < fieldList.size(); i++ ) {
         cmd.append( "     " + paren( fieldList.get( i ) ) );
         if ( i < fieldList.size() - 1 ) {
@@ -334,7 +333,7 @@ public class TeraDataBulkLoaderRoutines {
      * @param value the value
      */
     private void addField( String name, String value ) {
-      StringAppender item = new StringAppender( "VARCHAR " + name );
+      StringBuffer item = new StringBuffer( "VARCHAR " + name );
       if ( !( value == null || value.equals( "" ) ) ) {
         item.append( " = '" + value + "'" );
         fieldList.add( item.toString() );
@@ -381,7 +380,7 @@ public class TeraDataBulkLoaderRoutines {
      */
     @Override
     public String toString() {
-      StringAppender cmd = new StringAppender();
+      StringBuffer cmd = new StringBuffer();
       switch ( this.type ) {
         case TYPE_SCHEMA:
           cmd.append( "DEFINE SCHEMA " + this.name );
@@ -412,7 +411,7 @@ public class TeraDataBulkLoaderRoutines {
    * @return the string
    */
   private String addMissingOptions() {
-    StringAppender cmd = new StringAppender();
+    StringBuffer cmd = new StringBuffer();
     if ( this.meta.getIgnoreDupUpdate() ) {
       cmd.append( "IGNORE DUPLICATE UPDATE ROWS\n" );
     }
