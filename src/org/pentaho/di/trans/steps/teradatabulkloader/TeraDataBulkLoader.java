@@ -39,7 +39,6 @@ import java.util.Random;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.vfs.FileObject;
 
-import org.mvel2.util.StringAppender;
 import org.pentaho.di.core.Const;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.row.RowMetaInterface;
@@ -260,7 +259,7 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
    */
   public String[] createEnvironmentVariables() {
     List<String> varlist = new ArrayList<String>();
-    StringAppender libpath = new StringAppender();
+    StringBuffer libpath = new StringBuffer();
 
     varlist.add( "TWB_ROOT=" + this.meta.getTwbRoot() );
     varlist.add( "COPLIB=" + this.meta.getCopLibPath() );
