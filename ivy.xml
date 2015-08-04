@@ -23,7 +23,7 @@
   
     <!-- Third-party dependencies (Apache, etc.) -->
     <dependency org="commons-io" name="commons-io" rev="${dependency.commons-io.revision}" transitive="false"/>
-    <dependency org="commons-vfs" name="commons-vfs" rev="${dependency.commons-vfs.revision}" transitive="false"/>
+    <dependency org="org.apache.commons" name="commons-vfs2" rev="${dependency.commons-vfs.revision}" transitive="false"/>
     
     <!-- Pentaho dependencies (Kettle modules, etc.) -->            
     <dependency org="pentaho-kettle" name="kettle-core"      rev="${dependency.kettle.revision}"      changing="true"/>  
