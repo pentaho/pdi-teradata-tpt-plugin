@@ -15,6 +15,7 @@ projects/
 plugins/
 build-res/dojo-*
 build-res/module-scripts/
+target/
 *.class
 *.jar
 *.war
