@@ -6,12 +6,10 @@
     <version>8.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-<<<<<<< 8a22104bf3449019908e8c760135e94e5802f5ed
   <groupId>pentaho</groupId>
   <artifactId>pdi-teradata-tpt-plugin</artifactId>
   <version>8.0-SNAPSHOT</version>
   <packaging>jar</packaging>
-=======
   <groupId>org.pentaho.di.plugins</groupId>
   <artifactId>pdi-teradata-tpt-plugin-parent</artifactId>
   <version>8.0-SNAPSHOT</version>
@@ -20,7 +18,10 @@
     <module>core</module>
     <module>assemblies</module>
   </modules>
->>>>>>> [BACKLOG-12678] Mavenization
+  <groupId>pentaho</groupId>
+  <artifactId>pdi-teradata-tpt-plugin</artifactId>
+  <version>8.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
   <scm>
     <developerConnection>scm:git:git@github.com:pentaho/pdi-teradata-tpt-plugin.git</developerConnection>
     <tag>HEAD</tag>
@@ -39,30 +40,24 @@
       <artifactId>commons-io</artifactId>
       <version>${commons-io.version}</version>
       <scope>compile</scope>
-<<<<<<< 8a22104bf3449019908e8c760135e94e5802f5ed
-=======
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
->>>>>>> [BACKLOG-12678] Mavenization
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-vfs2</artifactId>
       <version>${apache-commons.version}</version>
       <scope>compile</scope>
-<<<<<<< 8a22104bf3449019908e8c760135e94e5802f5ed
-=======
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
->>>>>>> [BACKLOG-12678] Mavenization
     </dependency>
     <dependency>
       <groupId>pentaho-kettle</groupId>
@@ -75,15 +70,12 @@
       <artifactId>kettle-core</artifactId>
       <version>${kettle.version}</version>
       <scope>provided</scope>
-<<<<<<< 8a22104bf3449019908e8c760135e94e5802f5ed
-=======
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
->>>>>>> [BACKLOG-12678] Mavenization
     </dependency>
     <dependency>
       <groupId>pentaho-kettle</groupId>
@@ -96,38 +88,30 @@
       <artifactId>pentaho-xul-core</artifactId>
       <version>${pentaho.version}</version>
       <scope>provided</scope>
-<<<<<<< 8a22104bf3449019908e8c760135e94e5802f5ed
-=======
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
->>>>>>> [BACKLOG-12678] Mavenization
     </dependency>
     <dependency>
       <groupId>pentaho</groupId>
       <artifactId>pentaho-xul-swt</artifactId>
       <version>${pentaho.version}</version>
       <scope>provided</scope>
-<<<<<<< 8a22104bf3449019908e8c760135e94e5802f5ed
-=======
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
->>>>>>> [BACKLOG-12678] Mavenization
     </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
       <scope>test</scope>
-<<<<<<< 8a22104bf3449019908e8c760135e94e5802f5ed
-=======
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -141,22 +125,18 @@
       <version>${kettle.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
->>>>>>> [BACKLOG-12678] Mavenization
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
       <version>${mockito.version}</version>
       <scope>test</scope>
-<<<<<<< 8a22104bf3449019908e8c760135e94e5802f5ed
-=======
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
->>>>>>> [BACKLOG-12678] Mavenization
     </dependency>
   </dependencies>
 </project>
