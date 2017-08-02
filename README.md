@@ -1,30 +1,45 @@
-pdi-teradata-tpt-plugin - 'Teradata TPT Insert Upsert Bulk Loader'
-==================================================================
+# pdi-teradata-tpt-plugin #
 
-This step supports bulk loading via TPT using the tbuild command and supports Insert and Upsert. 
-It emulates the traditional Teradata MultiLoad utility and should be used instead of the Teradata Fastload bulkloader step.
+#### Pre-requisites for building the project:
+* Maven, version 3+
+* Java JDK 1.8
+* This [settings.xml](https://github.com/pentaho/maven-parent-poms/blob/master/maven-support-files/settings.xml) in your <user-home>/.m2 directory
 
-Status:
-- Beta to distribute via the PDI Marketplace (compatible with PDI 4.x and 5.0)
-- Within the actual beta and preview state, we offer limited customer support: 
-  Assistance is given by Services Development with no contractual support for production environments until PDI 5.1 GA.
+#### Building it
 
-History:
-- Derived from package org.pentaho.di.trans.steps.terafast
-- Modified for TPT by Kevin Hanrahan (cfikevin/pentaho-kettle forked from pentaho/pentaho-kettle)
-- Moved the core pentaho-kettle classes into a plugin project pdi-teradata-tpt-plugin (using mattyb149/pentaho-plugin-skeletons)
-- Using annotations instead of plugin.xml
-- Renamed the step to 'Teradata TPT Insert Upsert Bulk Loader', minor label changes
+__Build for nightly/release__
 
-Notes:
-- To build the plug-in jar and to resolve dependencies, use target 'default'
-- To create a Marketplace zip, build with target 'package' to create dist/TeraDataBulkLoader.zip (includes package-res/version.xml)
+All required profiles are activated by the presence of a property named "release".
 
-TODO (see also http://jira.pentaho.com/browse/PDI-10216): 
-- Code review: remove system.out, print stacktraces etc.
-- Code change from PDI 4.x to PDI 5.0/5.1 API (see also actual build warnings) 
-- Build: Review the usage of pentaho-plugin-skeletons (icon in package-res), mattyb149 updated pentaho-plugin-skeletons since it was used
-- UX: needs changes (tabs look different, some buttons/labels are too narrow) and get it reviewed by UX  
-- QA: check if variables are resolved correctly, test save to/from repository etc.
-- Doc: Finalize documentation: http://wiki.pentaho.com/display/EAI/Teradata+TPT+Insert+Upsert+Bulk+Loader
-- Check maturity level, upload to marketplace
+```
+$ mvn clean install -Drelease
+```
+
+This will build, unit test, and package the whole project (all of the sub-modules). The artifact will be generated in: ```target```
+
+__Build for CI/dev__
+
+The `release` builds will compile the source for production (meaning potential obfuscation and/or uglification). To build without that happening, just eliminate the `release` property.
+
+```
+$ mvn clean install
+```
+
+#### Running the tests
+
+__Unit tests__
+
+This will run all tests in the project.
+```
+$ mvn test
+```
+
+If you want to remote debug a single java unit test (default port is 5005):
+```
+$ cd core
+$ mvn test -Dtest=<<YourTest>> -Dmaven.surefire.debug
+```
+__IntelliJ__
+
+* Don't use IntelliJ's built-in maven. Make it use the same one you use from the commandline.
+  * Project Preferences -> Build, Execution, Deployment -> Build Tools -> Maven ==> Maven home directory
