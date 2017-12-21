@@ -3,12 +3,12 @@
   <parent>
     <groupId>org.pentaho</groupId>
     <artifactId>pentaho-ce-jar-parent-pom</artifactId>
-    <version>8.0-SNAPSHOT</version>
+    <version>8.0.0.1-99</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.pentaho.di.plugins</groupId>
   <artifactId>pdi-teradata-tpt-plugin-parent</artifactId>
-  <version>8.0-SNAPSHOT</version>
+  <version>8.0.0.1-99</version>
   <packaging>pom</packaging>
   <modules>
     <module>core</module>
@@ -19,8 +19,8 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
-    <kettle.version>8.0-SNAPSHOT</kettle.version>
-    <pentaho-xul.version>8.0-SNAPSHOT</pentaho-xul.version>
+    <kettle.version>8.0.0.1-99</kettle.version>
+    <pentaho-xul.version>8.0.0.1-99</pentaho-xul.version>
     <commons-io.version>1.4</commons-io.version>
     <apache-commons.version>2.1-20150824</apache-commons.version>
     <junit.version>4.7</junit.version>
