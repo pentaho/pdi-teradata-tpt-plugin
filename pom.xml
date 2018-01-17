@@ -20,7 +20,7 @@
   </scm>
   <properties>
     <pdi.version>8.1.0.0-SNAPSHOT</pdi.version>
-    <pentaho-xul.version>8.1.0.0-SNAPSHOT</pentaho-xul.version>
+    <commons-xul.version>8.1.0.0-SNAPSHOT</commons-xul.version>
     <commons-io.version>1.4</commons-io.version>
     <apache-commons.version>2.1-20150824</apache-commons.version>
     <junit.version>4.7</junit.version>
@@ -76,9 +76,9 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>pentaho</groupId>
-      <artifactId>pentaho-xul-core</artifactId>
-      <version>${pentaho-xul.version}</version>
+      <groupId>org.pentaho</groupId>
+      <artifactId>commons-xul-core</artifactId>
+      <version>${commons-xul.version}</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -88,9 +88,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>pentaho</groupId>
-      <artifactId>pentaho-xul-swt</artifactId>
-      <version>${pentaho-xul.version}</version>
+      <groupId>org.pentaho</groupId>
+      <artifactId>commons-xul-swt</artifactId>
+      <version>${commons-xul.version}</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
