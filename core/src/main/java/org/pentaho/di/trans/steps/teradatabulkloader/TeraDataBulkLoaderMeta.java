@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2017 by Hitachi Vantara : http://www.pentaho.com
+ * Copyright (C) 2002-2018 by Hitachi Vantara : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -58,7 +58,7 @@ import org.w3c.dom.Node;
  * Teradata TPT Insert Upsert Bulk Loader
  */
 
-@Step( id = "TeraDataBulkLoader", image = "BLKTDTPT.svg", name = "Teradata TPT Bulk Loader",
+@Step( id = "TeraDataBulkLoader", image = "BLKTDTPT.svg", name = "Teradata TPT bulk loader",
     description = "Teradata TPT bulkloader, using tbuild command",
     categoryDescription = "i18n:org.pentaho.di.trans.step:BaseStep.Category.Bulk",
     documentationUrl = "http://wiki.pentaho.com/display/EAI/Teradata+TPT+Insert+Upsert+Bulk+Loader" )
