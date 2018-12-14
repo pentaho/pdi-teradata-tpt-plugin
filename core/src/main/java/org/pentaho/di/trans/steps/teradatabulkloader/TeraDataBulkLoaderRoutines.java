@@ -284,7 +284,8 @@ public class TeraDataBulkLoaderRoutines {
   /**
    * The Class DefineSchema.
    */
-  private class DefineSchema {
+  @VisibleForTesting
+  class DefineSchema {
 
     /** The Constant TYPE_SCHEMA. */
     static final int TYPE_SCHEMA = 1;
@@ -561,33 +562,11 @@ public class TeraDataBulkLoaderRoutines {
       tableSchema.addField( fieldStream[i], type, len );
     }
 
-    DefineSchema dataConnector =
-        new DefineSchema( "ACCESS_MODULE_READER", "DATACONNECTOR PRODUCER", this.meta.getSchemaName() );
-    dataConnector.addField( "PrivateLogName", this.meta.getAccessLogFile() );
-    dataConnector.addField( "AccessModuleName", "np_axsmod.so" );
-    dataConnector.addField( "AccessModuleInitStr", null );
-    dataConnector.addField( "FileName", parent != null ? parent.data.fifoFilename : this.meta.getFifoFileName() );
-    dataConnector.addField( "Format", "Unformatted" );
-    dataConnector.addField( "OpenMode", "Read" );
-
+    DefineSchema dataConnector = getDataConnector();
     // DDL Operator
-    DefineSchema ddlOptions = new DefineSchema( "DDL_OPERATOR", "DDL", null );
-    ddlOptions.addField( "TdpId             ", this.meta.getDatabaseMeta().getHostname() );
-    ddlOptions.addField( "UserName          ", this.meta.getDatabaseMeta().getUsername() );
-    ddlOptions.addField( "UserPassword      ", isPreview ? hiddenPassword : this.meta.getDatabaseMeta().getPassword() );
-    ddlOptions.addField( "ErrorList         ", "3807" );
-
+    DefineSchema ddlOptions = getDdlOptions( isPreview, hiddenPassword );
     // Update Operator
-    DefineSchema updateOptions = new DefineSchema( "UPDATE_OPERATOR", "UPDATE", "*" );
-    updateOptions.addField( "TdpId             ", this.meta.getDatabaseMeta().getHostname() );
-    updateOptions.addField( "PrivateLogName    ", this.meta.getUpdateLogFile() );
-    updateOptions.addField( "UserName          ", this.meta.getDatabaseMeta().getUsername() );
-    updateOptions.addField( "UserPassword      ", isPreview ? hiddenPassword : this.meta.getDatabaseMeta()
-        .getPassword() );
-    updateOptions.addField( "LogTable          ", this.meta.getLogTable() );
-    updateOptions.addField( "TargetTable       ", getTargetSchema() + "." + this.meta.getTableName() );
-    updateOptions.addField( "ErrorTable1       ", this.meta.getErrorTable() );
-    updateOptions.addField( "ErrorTable2       ", this.meta.getErrorTable2() );
+    DefineSchema updateOptions = getUpdateOptions( isPreview, hiddenPassword );
 
     // Drop tables as needed......
     String dropTables = null;
@@ -643,6 +622,45 @@ public class TeraDataBulkLoaderRoutines {
       scriptFilePrintStream.print( script );
     }
     return script;
+  }
+
+  @VisibleForTesting
+  DefineSchema getDataConnector() {
+    DefineSchema dataConnector =
+        new DefineSchema( "ACCESS_MODULE_READER", "DATACONNECTOR PRODUCER", this.meta.getSchemaName() );
+    dataConnector.addField( "PrivateLogName", this.meta.getAccessLogFile() );
+    dataConnector.addField( "AccessModuleName", "np_axsmod.so" );
+    dataConnector.addField( "AccessModuleInitStr", null );
+    dataConnector.addField( "FileName", parent != null ? parent.data.fifoFilename : this.meta.getFifoFileName() );
+    dataConnector.addField( "Format", "Unformatted" );
+    dataConnector.addField( "OpenMode", "Read" );
+    return dataConnector;
+  }
+
+  @VisibleForTesting
+  DefineSchema getDdlOptions( boolean isPreview, String hiddenPassword ) {
+    DefineSchema ddlOptions = new DefineSchema( "DDL_OPERATOR", "DDL", null );
+    ddlOptions.addField( "TdpId             ", this.meta.getDatabaseMeta().getHostname() );
+    ddlOptions.addField( "UserName          ", this.meta.getDatabaseMeta().getUsername() );
+    ddlOptions.addField( "UserPassword      ", isPreview ? hiddenPassword : this.meta.getDatabaseMeta().getPassword() );
+    ddlOptions.addField( "ErrorList         ", "3807" );
+    return ddlOptions;
+  }
+
+  @VisibleForTesting
+  DefineSchema getUpdateOptions( boolean isPreview, String hiddenPassword ) {
+    DefineSchema updateOptions = new DefineSchema( "UPDATE_OPERATOR", "UPDATE", "*" );
+    updateOptions.addField( "TdpId             ", this.meta.getDatabaseMeta().getHostname() );
+    updateOptions.addField( "PrivateLogName    ", this.meta.getUpdateLogFile() );
+    updateOptions.addField( "UserName          ", this.meta.getDatabaseMeta().getUsername() );
+    updateOptions.addField( "UserPassword      ", isPreview ? hiddenPassword : this.meta.getDatabaseMeta()
+      .getPassword() );
+    updateOptions.addField( "LogTable          ", this.meta.getLogTable() );
+    updateOptions.addField( "TargetTable       ", getTargetSchema() + "." + this.meta.getTableName() );
+    updateOptions.addField( "WorkTable         ", this.meta.getWorkTable() );
+    updateOptions.addField( "ErrorTable1       ", this.meta.getErrorTable() );
+    updateOptions.addField( "ErrorTable2       ", this.meta.getErrorTable2() );
+    return updateOptions;
   }
 
   /**
