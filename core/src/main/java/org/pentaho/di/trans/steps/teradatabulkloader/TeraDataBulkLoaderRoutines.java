@@ -87,18 +87,21 @@ public class TeraDataBulkLoaderRoutines {
   }
 
   @VisibleForTesting
-  String getTargetSchema() {
+  String getTargetSchema( boolean isPreview ) {
 
-    return ( this.meta.getSchemaName() == null || this.meta.getSchemaName().isEmpty() ) ? this.meta.getDbName() : this.meta.getSchemaName();
+    if ( this.meta.getSchemaName() == null || this.meta.getSchemaName().isEmpty() ) {
+      return isPreview ? this.meta.getDbName() : parent.environmentSubstitute( this.meta.getDbName() );
+    }
+    return isPreview ? this.meta.getSchemaName() : parent.environmentSubstitute( this.meta.getSchemaName() );
   }
   /**
    * Creates the insert command.
    *
    * @return the string
    */
-  private String createInsertCommand() {
+  private String createInsertCommand( boolean isPreview ) {
     StringBuffer cmd = new StringBuffer();
-    cmd.append( " INSERT INTO " + getTargetSchema() + '.' + this.meta.getTableName() + "\n" );
+    cmd.append( " INSERT INTO " + getTargetSchema( isPreview ) + '.' + ( isPreview ? this.meta.getTableName() : parent.environmentSubstitute( this.meta.getTableName() + "\n" ) ) );
     cmd.append( "   (\n" );
     String[] fieldTable = this.meta.getFieldTable();
     for ( int i = 0; i < fieldTable.length; i++ ) {
@@ -129,11 +132,11 @@ public class TeraDataBulkLoaderRoutines {
    *
    * @return the string
    */
-  private String createUpsertCommand() {
+  private String createUpsertCommand( boolean isPreview ) {
     StringBuffer updatecmd = new StringBuffer();
     StringBuffer insertcmd = new StringBuffer();
 
-    updatecmd.append( " UPDATE " + getTargetSchema() + '.' + this.meta.getTableName() + " SET\n" );
+    updatecmd.append( " UPDATE " + getTargetSchema( isPreview ) + '.' + ( isPreview ? this.meta.getTableName() : parent.environmentSubstitute( this.meta.getTableName() ) + " SET\n" ) );
     String[] fieldTable = this.meta.getFieldTable();
     String[] fieldStream = this.meta.getFieldStream();
     Boolean[] fieldUpdate = this.meta.getFieldUpdate();
@@ -161,7 +164,7 @@ public class TeraDataBulkLoaderRoutines {
     }
     updatecmd.append( whereClause + ";\n" );
 
-    insertcmd.append( createInsertCommand() );
+    insertcmd.append( createInsertCommand( isPreview ) );
 
     return quote( updatecmd.toString() ) + ",\n" + quote( insertcmd.toString() );
   }
@@ -450,8 +453,8 @@ public class TeraDataBulkLoaderRoutines {
    * @param suffix the suffix
    * @return the string
    */
-  public String dropTable( String user, String suffix ) {
-    return "DROP TABLE " + ( Const.isEmpty( user ) ? this.meta.getTableName() + "_" + suffix : user );
+  public String dropTable( boolean isPreview, String user, String suffix ) {
+    return "DROP TABLE " + ( Const.isEmpty( user ) ? ( isPreview ? this.meta.getTableName() : parent.environmentSubstitute( this.meta.getTableName() ) ) + "_" + suffix : user );
   }
 
   /**
@@ -464,9 +467,9 @@ public class TeraDataBulkLoaderRoutines {
     File tempScriptFile;
 
     if ( meta.getGenerateScript() ) {
-      tempScriptFile = File.createTempFile( FilenameUtils.getBaseName( meta.getScriptFileName() ), "" );
+      tempScriptFile = File.createTempFile( FilenameUtils.getBaseName( parent.environmentSubstitute( meta.getScriptFileName() ) ), "" );
     } else {
-      tempScriptFile = File.createTempFile( FilenameUtils.getBaseName( meta.getExistingScriptFile() ), "" );
+      tempScriptFile = File.createTempFile( FilenameUtils.getBaseName( parent.environmentSubstitute( meta.getExistingScriptFile() ) ), "" );
     }
     tempScriptFile.deleteOnExit();
 
@@ -494,7 +497,7 @@ public class TeraDataBulkLoaderRoutines {
    * @throws Exception the exception
    */
   public void createFromExistingScriptFile() throws Exception {
-    FileInputStream originalScript = new FileInputStream( this.meta.getExistingScriptFile() );
+    FileInputStream originalScript = new FileInputStream( parent.environmentSubstitute( this.meta.getExistingScriptFile() ) );
     DataInputStream in = new DataInputStream( originalScript );
     BufferedReader br = new BufferedReader( new InputStreamReader( in ) );
     String strLine;
@@ -547,7 +550,7 @@ public class TeraDataBulkLoaderRoutines {
     boolean isPreview = parent == null;
     String hiddenPassword = BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.HiddenPassword" );
 
-    DefineSchema tableSchema = new DefineSchema( this.meta.getSchemaName() );
+    DefineSchema tableSchema = new DefineSchema( isPreview ? this.meta.getSchemaName() : parent.environmentSubstitute( this.meta.getSchemaName() ) );
     // Iterate over the FieldStream array, add each with its types
     String[] fieldStream = this.meta.getFieldStream();
     if ( inputFieldTypes.size() == 0 || fieldStream == null || inputFieldTypes == null || inputFieldLength == null ) {
@@ -562,48 +565,27 @@ public class TeraDataBulkLoaderRoutines {
       tableSchema.addField( fieldStream[i], type, len );
     }
 
-    DefineSchema dataConnector = getDataConnector();
+    DefineSchema dataConnector = getDataConnector( isPreview );
     // DDL Operator
     DefineSchema ddlOptions = getDdlOptions( isPreview, hiddenPassword );
     // Update Operator
     DefineSchema updateOptions = getUpdateOptions( isPreview, hiddenPassword );
 
     // Drop tables as needed......
-    String dropTables = null;
-    boolean drop = false;
-    ApplyClause dropClauses = new ApplyClause();
-    if ( this.meta.getDropLogTable() ) {
-      dropClauses.addClause( quote( dropTable( this.meta.getLogTable(), "" ) ) );
-      drop = true;
-    }
-    if ( this.meta.getDropWorkTable() ) {
-      dropClauses.addClause( quote( dropTable( this.meta.getWorkTable(), "WT" ) ) );
-      drop = true;
-    }
-    if ( this.meta.getDropErrorTable() ) {
-      dropClauses.addClause( quote( dropTable( this.meta.getErrorTable(), "ET" ) ) );
-      drop = true;
-    }
-    if ( this.meta.getDropErrorTable2() ) {
-      dropClauses.addClause( quote( dropTable( this.meta.getErrorTable2(), "UV" ) ) );
-      drop = true;
-    }
-    if ( drop ) {
-      dropTables = createStep( "Setup_tables", dropClauses.toString(), toSelectOperator( "DDL_OPERATOR", null ) );
-    }
+    String dropTables = getDropTables( isPreview );
 
     // Specific Command
     String loadCommand = null;
     ApplyClause cmdApply = new ApplyClause();
     switch ( this.meta.getActionType() ) {
       case 0:
-        cmdApply.addClause( quote( createInsertCommand() ) );
+        cmdApply.addClause( quote( createInsertCommand( isPreview ) ) );
         loadCommand =
             createStep( "Load_Table", cmdApply.toString(), toSelectOperator( "UPDATE_OPERATOR[2]",
                 "ACCESS_MODULE_READER[2]" ) );
         break;
       case 1:
-        cmdApply.addClause( createUpsertCommand() );
+        cmdApply.addClause( createUpsertCommand( isPreview ) );
         loadCommand =
             createStep( "Upsert_Table", cmdApply.toString() + addMissingOptions(), toSelectOperator(
                 "UPDATE_OPERATOR[2]", "ACCESS_MODULE_READER[2]" ) );
@@ -625,10 +607,37 @@ public class TeraDataBulkLoaderRoutines {
   }
 
   @VisibleForTesting
-  DefineSchema getDataConnector() {
+  String getDropTables( boolean isPreview ) {
+    String dropTables = null;
+    boolean drop = false;
+    ApplyClause dropClauses = new ApplyClause();
+    if ( this.meta.getDropLogTable() ) {
+      dropClauses.addClause( quote( dropTable( isPreview, isPreview ? this.meta.getLogTable() : parent.environmentSubstitute( this.meta.getLogTable() ), "" ) ) );
+      drop = true;
+    }
+    if ( this.meta.getDropWorkTable() ) {
+      dropClauses.addClause( quote( dropTable( isPreview, isPreview ? this.meta.getWorkTable() : parent.environmentSubstitute( this.meta.getWorkTable() ), "WT" ) ) );
+      drop = true;
+    }
+    if ( this.meta.getDropErrorTable() ) {
+      dropClauses.addClause( quote( dropTable( isPreview, isPreview ? this.meta.getErrorTable() : parent.environmentSubstitute( this.meta.getErrorTable() ), "ET" ) ) );
+      drop = true;
+    }
+    if ( this.meta.getDropErrorTable2() ) {
+      dropClauses.addClause( quote( dropTable( isPreview, isPreview ? this.meta.getErrorTable2() : parent.environmentSubstitute( this.meta.getErrorTable2() ), "UV" ) ) );
+      drop = true;
+    }
+    if ( drop ) {
+      dropTables = createStep( "Setup_tables", dropClauses.toString(), toSelectOperator( "DDL_OPERATOR", null ) );
+    }
+    return dropTables;
+  }
+
+  @VisibleForTesting
+  DefineSchema getDataConnector( boolean isPreview ) {
     DefineSchema dataConnector =
-        new DefineSchema( "ACCESS_MODULE_READER", "DATACONNECTOR PRODUCER", this.meta.getSchemaName() );
-    dataConnector.addField( "PrivateLogName", this.meta.getAccessLogFile() );
+        new DefineSchema( "ACCESS_MODULE_READER", "DATACONNECTOR PRODUCER", isPreview ? this.meta.getSchemaName() : parent.environmentSubstitute( this.meta.getSchemaName() ) );
+    dataConnector.addField( "PrivateLogName", isPreview ? this.meta.getAccessLogFile() : parent.environmentSubstitute( this.meta.getAccessLogFile() ) );
     dataConnector.addField( "AccessModuleName", "np_axsmod.so" );
     dataConnector.addField( "AccessModuleInitStr", null );
     dataConnector.addField( "FileName", parent != null ? parent.data.fifoFilename : this.meta.getFifoFileName() );
@@ -651,15 +660,15 @@ public class TeraDataBulkLoaderRoutines {
   DefineSchema getUpdateOptions( boolean isPreview, String hiddenPassword ) {
     DefineSchema updateOptions = new DefineSchema( "UPDATE_OPERATOR", "UPDATE", "*" );
     updateOptions.addField( "TdpId             ", this.meta.getDatabaseMeta().getHostname() );
-    updateOptions.addField( "PrivateLogName    ", this.meta.getUpdateLogFile() );
+    updateOptions.addField( "PrivateLogName    ", isPreview ? this.meta.getUpdateLogFile() : parent.environmentSubstitute( this.meta.getUpdateLogFile() ) );
     updateOptions.addField( "UserName          ", this.meta.getDatabaseMeta().getUsername() );
     updateOptions.addField( "UserPassword      ", isPreview ? hiddenPassword : this.meta.getDatabaseMeta()
       .getPassword() );
-    updateOptions.addField( "LogTable          ", this.meta.getLogTable() );
-    updateOptions.addField( "TargetTable       ", getTargetSchema() + "." + this.meta.getTableName() );
-    updateOptions.addField( "WorkTable         ", this.meta.getWorkTable() );
-    updateOptions.addField( "ErrorTable1       ", this.meta.getErrorTable() );
-    updateOptions.addField( "ErrorTable2       ", this.meta.getErrorTable2() );
+    updateOptions.addField( "LogTable          ", isPreview ? this.meta.getLogTable() : parent.environmentSubstitute( this.meta.getLogTable() ) );
+    updateOptions.addField( "TargetTable       ", getTargetSchema( isPreview ) + "." + ( isPreview ? this.meta.getTableName() : parent.environmentSubstitute( this.meta.getTableName() ) ) );
+    updateOptions.addField( "WorkTable         ", isPreview ? this.meta.getWorkTable() : parent.environmentSubstitute( this.meta.getWorkTable() ) );
+    updateOptions.addField( "ErrorTable1       ", isPreview ? this.meta.getErrorTable() : parent.environmentSubstitute( this.meta.getErrorTable() ) );
+    updateOptions.addField( "ErrorTable2       ", isPreview ? this.meta.getErrorTable2() : parent.environmentSubstitute( this.meta.getErrorTable2() ) );
     return updateOptions;
   }
 
