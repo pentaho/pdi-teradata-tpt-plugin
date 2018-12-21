@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2017 by Hitachi Vantara : http://www.pentaho.com
+ * Copyright (C) 2002-2018 by Hitachi Vantara : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -85,6 +86,11 @@ public class TeraDataBulkLoaderRoutines {
     this.meta = meta;
   }
 
+  @VisibleForTesting
+  String getTargetSchema() {
+
+    return ( this.meta.getSchemaName() == null || this.meta.getSchemaName().isEmpty() ) ? this.meta.getDbName() : this.meta.getSchemaName();
+  }
   /**
    * Creates the insert command.
    *
@@ -92,7 +98,7 @@ public class TeraDataBulkLoaderRoutines {
    */
   private String createInsertCommand() {
     StringBuffer cmd = new StringBuffer();
-    cmd.append( " INSERT INTO " + this.meta.getDbName() + '.' + this.meta.getTableName() + "\n" );
+    cmd.append( " INSERT INTO " + getTargetSchema() + '.' + this.meta.getTableName() + "\n" );
     cmd.append( "   (\n" );
     String[] fieldTable = this.meta.getFieldTable();
     for ( int i = 0; i < fieldTable.length; i++ ) {
@@ -127,7 +133,7 @@ public class TeraDataBulkLoaderRoutines {
     StringBuffer updatecmd = new StringBuffer();
     StringBuffer insertcmd = new StringBuffer();
 
-    updatecmd.append( " UPDATE " + this.meta.getDbName() + '.' + this.meta.getTableName() + " SET\n" );
+    updatecmd.append( " UPDATE " + getTargetSchema() + '.' + this.meta.getTableName() + " SET\n" );
     String[] fieldTable = this.meta.getFieldTable();
     String[] fieldStream = this.meta.getFieldStream();
     Boolean[] fieldUpdate = this.meta.getFieldUpdate();
@@ -579,7 +585,7 @@ public class TeraDataBulkLoaderRoutines {
     updateOptions.addField( "UserPassword      ", isPreview ? hiddenPassword : this.meta.getDatabaseMeta()
         .getPassword() );
     updateOptions.addField( "LogTable          ", this.meta.getLogTable() );
-    updateOptions.addField( "TargetTable       ", this.meta.getDbName() + "." + this.meta.getTableName() );
+    updateOptions.addField( "TargetTable       ", getTargetSchema() + "." + this.meta.getTableName() );
     updateOptions.addField( "ErrorTable1       ", this.meta.getErrorTable() );
     updateOptions.addField( "ErrorTable2       ", this.meta.getErrorTable2() );
 
