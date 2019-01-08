@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2017 by Hitachi Vantara : http://www.pentaho.com
+ * Copyright (C) 2002-2018 by Hitachi Vantara : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -238,12 +238,12 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
       builder.append( "-f " + this.tempScriptFile + " " );
       if ( !this.meta.getGenerateScript() ) {
 
-        String varfile = this.meta.getVariableFile();
+        String varfile = environmentSubstitute( this.meta.getVariableFile() );
         if ( varfile != null && !varfile.equals( "" ) ) {
           builder.append( "-v " + varfile + " " );
         }
       }
-      builder.append( this.meta.getJobName() );
+      builder.append( environmentSubstitute( this.meta.getJobName() ) );
     } catch ( Exception e ) {
       throw new KettleException(
           BaseMessages.getString( PKG, "TeraDataBulkLoader.Exception.ErrorBuildAppString" ), e );
@@ -261,17 +261,17 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     List<String> varlist = new ArrayList<String>();
     StringBuffer libpath = new StringBuffer();
 
-    varlist.add( "TWB_ROOT=" + this.meta.getTwbRoot() );
-    varlist.add( "COPLIB=" + this.meta.getCopLibPath() );
-    varlist.add( "COPERR=" + this.meta.getCopLibPath() );
-    libpath.append( this.meta.getLibPath() + ":" );
-    libpath.append( this.meta.getTbuildLibPath() + ":" );
-    libpath.append( this.meta.getTdicuLibPath() + ":" );
-    libpath.append( this.meta.getLibPath() + "64:" );
-    libpath.append( this.meta.getTbuildLibPath() + "64:" );
-    libpath.append( this.meta.getTdicuLibPath() + "64:" );
+    varlist.add( "TWB_ROOT=" + environmentSubstitute( this.meta.getTwbRoot() ) );
+    varlist.add( "COPLIB=" + environmentSubstitute( this.meta.getCopLibPath() ) );
+    varlist.add( "COPERR=" + environmentSubstitute( this.meta.getCopLibPath() ) );
+    libpath.append( environmentSubstitute( this.meta.getLibPath() ) + ":" );
+    libpath.append( environmentSubstitute( this.meta.getTbuildLibPath() ) + ":" );
+    libpath.append( environmentSubstitute( this.meta.getTdicuLibPath() ) + ":" );
+    libpath.append( environmentSubstitute( this.meta.getLibPath() ) + "64:" );
+    libpath.append( environmentSubstitute( this.meta.getTbuildLibPath() ) + "64:" );
+    libpath.append( environmentSubstitute( this.meta.getTdicuLibPath() ) + "64:" );
     varlist.add( "LD_LIBRARY_PATH=" + libpath.toString() );
-    return (String[]) varlist.toArray( new String[varlist.size()] );
+    return varlist.toArray( new String[varlist.size()] );
   }
 
   /**
