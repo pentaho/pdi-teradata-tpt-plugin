@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2018 by Hitachi Vantara : http://www.pentaho.com
+ * Copyright (C) 2002-2019 by Hitachi Vantara : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -493,6 +493,13 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     }
   }
 
+  protected void verifyDatabaseConnection() throws KettleException {
+    // Confirming Database Connection is defined.
+    if ( meta.getDatabaseMeta() == null ) {
+      throw new KettleException( BaseMessages.getString( PKG, "TeraDataBulkLoaderMeta.Exception.NoConnectionDefined" ) );
+    }
+  }
+
   /**
    * Initialize this step
    */
@@ -502,6 +509,12 @@ public class TeraDataBulkLoader extends BaseStep implements StepInterface {
     data = (TeraDataBulkLoaderData) sdi;
 
     if ( super.init( smi, sdi ) ) {
+      try {
+        verifyDatabaseConnection();
+      } catch ( KettleException ex ) {
+        logError( ex.getMessage() );
+        return false;
+      }
       return true;
     }
     return false;
