@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2018 by Hitachi Vantara : http://www.pentaho.com
+ * Copyright (C) 2002-2019 by Hitachi Vantara : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -30,8 +30,11 @@ import org.pentaho.di.trans.steps.mock.StepMockHelper;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -126,6 +129,20 @@ public class TeraDataBulkLoaderTest {
       assertTrue( commandLine.contains( expected ) );
     } catch ( KettleException e ) {
       fail( e.getMessage() );
+    }
+  }
+
+  @Test
+  public void testNoDatabaseConnection() {
+    assertFalse( teraDataBulkLoader.init( helper.initStepMetaInterface, helper.initStepDataInterface ) );
+
+    try {
+      // Verify that the database connection being set to null throws a KettleException with the following message.
+      teraDataBulkLoader.verifyDatabaseConnection();
+      // If the method does not throw a Kettle Exception, then the DB was set and not null for this test. Fail it.
+      fail( "Database Connection is not null, this fails the test." );
+    } catch ( KettleException aKettleException ) {
+      assertThat( aKettleException.getMessage(), containsString( "There is no connection defined in this step." ) );
     }
   }
 }
