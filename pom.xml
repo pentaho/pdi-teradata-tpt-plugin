@@ -22,7 +22,6 @@
     <pdi.version>9.0.0.0-SNAPSHOT</pdi.version>
     <commons-xul.version>9.0.0.0-SNAPSHOT</commons-xul.version>
     <commons-io.version>1.4</commons-io.version>
-    <commons-vfs2>2.2</commons-vfs2>
     <junit.version>4.7</junit.version>
     <mockito.version>1.8.4</mockito.version>
   </properties>
@@ -42,7 +41,6 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-vfs2</artifactId>
-      <version>${commons-vfs2}</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
