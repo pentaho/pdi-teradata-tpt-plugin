@@ -132,11 +132,12 @@ public class TeraDataBulkLoaderRoutines {
    *
    * @return the string
    */
-  private String createUpsertCommand( boolean isPreview ) {
+  @VisibleForTesting
+  String createUpsertCommand( boolean isPreview ) {
     StringBuffer updatecmd = new StringBuffer();
     StringBuffer insertcmd = new StringBuffer();
 
-    updatecmd.append( " UPDATE " + getTargetSchema( isPreview ) + '.' + ( isPreview ? this.meta.getTableName() : parent.environmentSubstitute( this.meta.getTableName() ) + " SET\n" ) );
+    updatecmd.append( " UPDATE " + getTargetSchema( isPreview ) + '.' + ( isPreview ? this.meta.getTableName() : parent.environmentSubstitute( this.meta.getTableName() ) ) + " SET\n" );
     String[] fieldTable = this.meta.getFieldTable();
     String[] fieldStream = this.meta.getFieldStream();
     Boolean[] fieldUpdate = this.meta.getFieldUpdate();
