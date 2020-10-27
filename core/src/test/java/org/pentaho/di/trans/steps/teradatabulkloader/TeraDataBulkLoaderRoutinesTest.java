@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2018 by Hitachi Vantara : http://www.pentaho.com
+ * Copyright (C) 2002-2020 by Hitachi Vantara : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -27,6 +27,7 @@ import org.pentaho.di.core.database.DatabaseMeta;
 import org.pentaho.di.core.variables.Variables;
 
 import java.io.File;
+import java.util.UUID;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -268,5 +269,27 @@ public class TeraDataBulkLoaderRoutinesTest {
       + ");\n";
     String dropTables = teraDataBulkLoaderRoutines.getDropTables( true );
     assertEquals( expectedDropTables, dropTables );
+  }
+
+  @Test
+  public void testCreateUpsertCommandPreview() {
+
+    String tableName = UUID.randomUUID().toString();
+    String schemaName = UUID.randomUUID().toString();
+
+    String[] fieldTable = new String[] {};
+    String[] fieldStream = new String[] {};
+    Boolean[] fieldUpdate = new Boolean[] {};
+
+    when( teraDataBulkLoaderMetaMock.getSchemaName() ).thenReturn( schemaName );
+    when( teraDataBulkLoaderMetaMock.getTableName() ).thenReturn( tableName );
+    when( teraDataBulkLoaderMetaMock.getFieldTable() ).thenReturn( fieldTable );
+    when( teraDataBulkLoaderMetaMock.getFieldStream() ).thenReturn( fieldStream );
+    when( teraDataBulkLoaderMetaMock.getFieldUpdate() ).thenReturn( fieldUpdate );
+    when( teraDataBulkLoaderMetaMock.getKeyStream() ).thenReturn( new String[] {} );
+
+    String upsertCommand = this.teraDataBulkLoaderRoutines.createUpsertCommand( true );
+    assertEquals( true, upsertCommand.startsWith( "' UPDATE " + schemaName + "." + tableName + " SET\n"  ) );
+
   }
 }
