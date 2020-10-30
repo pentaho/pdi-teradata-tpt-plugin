@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2018 by Hitachi Vantara : http://www.pentaho.com
+ * Copyright (C) 2002-2020 by Hitachi Vantara : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -153,14 +153,16 @@ public class TeraDataBulkLoaderRoutines {
     }
 
     // Build the update
+    int numberOfFieldsAdded = 0;
     for ( int i = 0; i < fieldTable.length; i++ ) {
       // cant include this - causes teradata error if used in WHERE, or user simply selects N for update
       if ( !( usedAsKey.containsKey( fieldTable[i] ) || !fieldUpdate[i] ) ) {
-        if ( i > 0 ) {
+        if ( numberOfFieldsAdded > 0 ) {
           updatecmd.append( "," );
         }
         updatecmd.append( "          " + fieldTable[i] + " = :" + fieldStream[i] );
         updatecmd.append( "\n" );
+        numberOfFieldsAdded++;
       }
     }
     updatecmd.append( whereClause + ";\n" );
