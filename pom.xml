@@ -21,7 +21,7 @@
   <properties>
     <pdi.version>9.3.0.0-SNAPSHOT</pdi.version>
     <commons-xul.version>9.3.0.0-SNAPSHOT</commons-xul.version>
-    <commons-io.version>1.4</commons-io.version>
+    <commons-io.version>2.7</commons-io.version>
     <junit.version>4.7</junit.version>
     <mockito.version>1.8.4</mockito.version>
   </properties>
