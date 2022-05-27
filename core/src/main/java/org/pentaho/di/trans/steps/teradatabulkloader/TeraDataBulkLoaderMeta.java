@@ -61,7 +61,7 @@ import org.w3c.dom.Node;
 @Step( id = "TeraDataBulkLoader", image = "BLKTDTPT.svg", name = "Teradata TPT bulk loader",
     description = "Teradata TPT bulkloader, using tbuild command",
     categoryDescription = "i18n:org.pentaho.di.trans.step:BaseStep.Category.Bulk",
-    documentationUrl = "http://wiki.pentaho.com/display/EAI/Teradata+TPT+Insert+Upsert+Bulk+Loader" )
+    documentationUrl = "https://pentaho-community.atlassian.net/wiki/display/EAI/Teradata+TPT+Insert+Upsert+Bulk+Loader" )
 public class TeraDataBulkLoaderMeta extends BaseStepMeta implements StepMetaInterface,
     ProvidesDatabaseConnectionInformation {
 
