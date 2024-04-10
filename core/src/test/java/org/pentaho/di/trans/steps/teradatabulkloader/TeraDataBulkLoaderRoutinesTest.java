@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2002-2020 by Hitachi Vantara : http://www.pentaho.com
+ * Copyright (C) 2002-2024 by Hitachi Vantara : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -27,15 +27,16 @@ import org.pentaho.di.core.database.DatabaseMeta;
 import org.pentaho.di.core.variables.Variables;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.UUID;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+//import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 public class TeraDataBulkLoaderRoutinesTest {
 
@@ -74,11 +75,14 @@ public class TeraDataBulkLoaderRoutinesTest {
   }
 
   @Test
-  public void getDataConnectorTest() {
+  public void getDataConnectorTest() throws NoSuchFieldException, IllegalAccessException {
     when( teraDataBulkLoaderMetaMock.getSchemaName() ).thenReturn( "schemaName" );
     when( teraDataBulkLoaderMetaMock.getAccessLogFile() ).thenReturn( "accessLog" );
     when( teraDataBulkLoaderMetaMock.getFifoFileName() ).thenReturn( "fifoFileName" );
-    setInternalState( teraDataBulkLoaderRoutines, "parent", null );
+    //setInternalState( teraDataBulkLoaderRoutines, "parent", null );
+    Field fieldParent= TeraDataBulkLoaderRoutines.class.getDeclaredField("parent");
+    fieldParent.setAccessible(true);
+    fieldParent.set( teraDataBulkLoaderRoutines, null );
     String expectedDataConnector = "DEFINE OPERATOR ACCESS_MODULE_READER\n"
       + "TYPE DATACONNECTOR PRODUCER\n"
       + "SCHEMA schemaName\n"
@@ -112,12 +116,15 @@ public class TeraDataBulkLoaderRoutinesTest {
   }
 
   @Test
-  public void getDdlOptionsTest() {
+  public void getDdlOptionsTest() throws NoSuchFieldException, IllegalAccessException {
     when( teraDataBulkLoaderMetaMock.getDatabaseMeta() ).thenReturn( dataBaseMetaDataMock );
     when( dataBaseMetaDataMock.getHostname() ).thenReturn( "hostname" );
     when( dataBaseMetaDataMock.getUsername() ).thenReturn( "username" );
     when( dataBaseMetaDataMock.getPassword() ).thenReturn( "passwordFromMeta" );
-    setInternalState( teraDataBulkLoaderRoutines, "parent", teraDataBulkLoaderMock );
+    //setInternalState( teraDataBulkLoaderRoutines, "parent", teraDataBulkLoaderMock );
+    Field field= TeraDataBulkLoaderRoutines.class.getDeclaredField("parent");
+    field.setAccessible(true);
+    field.set( teraDataBulkLoaderRoutines, teraDataBulkLoaderMock );
     String password = "myPassword";
     String expectedDdlOptionsPreview = "DEFINE OPERATOR DDL_OPERATOR\n"
       + "TYPE DDL\n"
@@ -163,7 +170,7 @@ public class TeraDataBulkLoaderRoutinesTest {
   }
 
   @Test
-  public void getUpdateOptionsTest() {
+  public void getUpdateOptionsTest() throws NoSuchFieldException, IllegalAccessException {
     when( teraDataBulkLoaderMetaMock.getDatabaseMeta() ).thenReturn( dataBaseMetaDataMock );
     when( dataBaseMetaDataMock.getHostname() ).thenReturn( "hostname" );
     when( dataBaseMetaDataMock.getUsername() ).thenReturn( "username" );
@@ -175,10 +182,16 @@ public class TeraDataBulkLoaderRoutinesTest {
     when( teraDataBulkLoaderMetaMock.getErrorTable() ).thenReturn( "errorTable" );
     when( teraDataBulkLoaderMetaMock.getErrorTable2() ).thenReturn( "errorTable2" );
     when( teraDataBulkLoaderMetaMock.getDbName() ).thenReturn( "dbName" );
-    setInternalState( teraDataBulkLoaderRoutines, "parent", teraDataBulkLoaderMock );
+    //setInternalState( teraDataBulkLoaderRoutines, "parent", teraDataBulkLoaderMock );
+    Field field= TeraDataBulkLoaderRoutines.class.getDeclaredField("parent");
+    field.setAccessible(true);
+    field.set( teraDataBulkLoaderRoutines, teraDataBulkLoaderMock );
     Variables variables = new Variables();
     //Init the variables in the step
-    setInternalState( teraDataBulkLoaderMock, "variables", variables );
+    //setInternalState( teraDataBulkLoaderMock, "variables", variables );
+    Field fieldVar= TeraDataBulkLoader.class.getSuperclass().getDeclaredField("variables");
+    fieldVar.setAccessible(true);
+    fieldVar.set( teraDataBulkLoaderMock, variables );
     when( teraDataBulkLoaderMock.environmentSubstitute( anyString() ) ).thenCallRealMethod();
     String password = "myPassword";
     String expectedUpdataOptionsPreview = "DEFINE OPERATOR UPDATE_OPERATOR\n"
@@ -200,10 +213,13 @@ public class TeraDataBulkLoaderRoutinesTest {
   }
 
   @Test
-  public void createScriptFileTest() {
+  public void createScriptFileTest() throws NoSuchFieldException, IllegalAccessException {
     String expectedFile = "myFile";
     //Init the variables in the step
-    setInternalState( teraDataBulkLoaderMock, "variables", new Variables() );
+    //setInternalState( teraDataBulkLoaderMock, "variables", new Variables() );
+    Field field= TeraDataBulkLoader.class.getSuperclass().getDeclaredField("variables");
+    field.setAccessible(true);
+    field.set( teraDataBulkLoaderMock, new Variables() );
     //Return the filename, in the end the script should contain this filename.
     when( teraDataBulkLoaderMetaMock.getExistingScriptFile() ).thenReturn( expectedFile );
     when( teraDataBulkLoaderMock.environmentSubstitute( anyString() ) ).thenCallRealMethod();
@@ -222,13 +238,16 @@ public class TeraDataBulkLoaderRoutinesTest {
   }
 
   @Test
-  public void createScriptFileWithEnvVariablesTest() {
+  public void createScriptFileWithEnvVariablesTest() throws NoSuchFieldException, IllegalAccessException {
     String expectedFile = "file";
     String variable = "FileVariable";
     Variables variables = new Variables();
     variables.setVariable( variable, expectedFile );
     //Init the variables in the step
-    setInternalState( teraDataBulkLoaderMock, "variables", variables );
+    //setInternalState( teraDataBulkLoaderMock, "variables", variables );
+    Field field= TeraDataBulkLoader.class.getSuperclass().getDeclaredField("variables");
+    field.setAccessible(true);
+    field.set( teraDataBulkLoaderMock, variables );
     //Return the variable instead of the filename, in the end the script should contain filename and not the variable name.
     when( teraDataBulkLoaderMetaMock.getExistingScriptFile() ).thenReturn( "${" + variable + "}" );
     when( teraDataBulkLoaderMock.environmentSubstitute( anyString() ) ).thenCallRealMethod();
